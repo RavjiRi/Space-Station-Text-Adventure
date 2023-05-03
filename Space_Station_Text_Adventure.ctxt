@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=Space_Station_Text_Adventure
+comment0.text=\r\n\ Text\ adventure\ where\ you\ have\ to\ divert\ the\ space\ station\ from\ collision\ course\r\n\ with\ a\ meteor\r\n\r\n\ @author\ Ritesh\ Ravji\r\n\ @version\ 4/5/23\r\n
+comment1.params=
+comment1.target=Space_Station_Text_Adventure()
+comment1.text=\r\n\ Constructor\ for\ objects\ of\ class\ Space_Station_Text_Adventure\r\n
+numComments=2
