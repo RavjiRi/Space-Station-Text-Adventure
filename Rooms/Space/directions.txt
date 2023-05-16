@@ -1,0 +1,6 @@
+north Space
+south Space
+east Space
+west Space
+up Space
+down Space

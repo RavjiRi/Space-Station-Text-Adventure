@@ -1,0 +1,4 @@
+south Entrance
+west EngineRoom
+north ControlRoom
+east PotatoFarm
