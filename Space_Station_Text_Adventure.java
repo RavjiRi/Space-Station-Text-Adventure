@@ -8,7 +8,7 @@
 
 import java.util.Scanner; // Read keyboard
 import java.util.Arrays; // Flexible sized array
-import java.util.ArrayList;
+import java.util.ArrayList; // Flexible sized array
 import java.io.File; // Get files
 import java.io.IOException; // Handle file exceptions
 
@@ -26,7 +26,9 @@ public class Space_Station_Text_Adventure
         DIRECTION,
         DESCRIPTION,
         PICKUP,
-        DROP
+        DROP,
+        INTERACT,
+        USE
     }
     
     Scanner keyboard = new Scanner(System.in);
@@ -37,6 +39,8 @@ public class Space_Station_Text_Adventure
     Dictionary<String, Dictionary> directionDictionary = new Hashtable<>();
     // Dictionary for items
     Dictionary<String, ArrayList<String>> itemsDictionary = new Hashtable<>();
+    // Dictionary for interactables
+    Dictionary<String, Dictionary> interactDictionary = new Hashtable<>();
     
     // Methods to do with directions
     
@@ -46,8 +50,15 @@ public class Space_Station_Text_Adventure
         directionDictionary.get(room).put(direction, leadsTo);
     }
     
+    void delDirection(String room, String direction) {
+        // Delete a direction in a room
+        // Intended to be used with interactables
+        directionDictionary.get(room).remove(direction);
+    }
+    
+    
     String roomInDirection(String room, String direction) {
-        // Check if room is in a direction and print room name or return null
+        // Check if room is in a direction and return room name or return null
         String leadsTo = (String) directionDictionary.get(room).get(direction);
         return leadsTo;
     }
@@ -57,7 +68,6 @@ public class Space_Station_Text_Adventure
         Dictionary roomDictionary = directionDictionary.get(currentRoom);
         
         System.out.println("You can move:");
-        
         Enumeration<String> directions = roomDictionary.keys();
         while (directions.hasMoreElements()) {
             // Get dictionary key (direction)
@@ -91,6 +101,38 @@ public class Space_Station_Text_Adventure
         System.out.println("");
     }
     
+    // Interact methods
+    
+    void addInteract(String room, String interactName, String direction, String startRoom, String leadsTo, String enabledText, String disabledText) {
+        // method adds item to room
+        
+        // Get all current items in room
+        Dictionary<String, String[]> roomInteractables= interactDictionary.get(room);
+        //roomInteractables.put(new Hashtable<>());
+        
+        String[] interactInfo = {startRoom, leadsTo, direction, enabledText, disabledText};
+        roomInteractables.put(interactName, interactInfo);
+        // don't need to set item array to dictionary as it is already changed when added item
+    }
+    
+    void printInteractsInRoom(String room) {
+        Dictionary roomInteractables = interactDictionary.get(room);
+        Enumeration <String> interactables = roomInteractables.keys();
+        
+        System.out.println("You can interact with:");
+        
+        while (interactables.hasMoreElements()) {
+            String key = interactables.nextElement();
+            System.out.println(key);
+        }
+    }
+    
+    String[] getInteractInRoom(String room, String interactName) {
+        Dictionary<String, String[]> roomInteractables = interactDictionary.get(room);
+        String[] interactInfo = roomInteractables.get(interactName);
+        return interactInfo;
+    }
+    
     // Inventory methods
     
     void addItem(String room, String item) {
@@ -120,6 +162,11 @@ public class Space_Station_Text_Adventure
     
     boolean removeInventory(String item) {
         return removeItem("Inventory", item);
+    }
+    
+    boolean hasItem(String item) {
+        ArrayList<String> roomItems = itemsDictionary.get("Inventory");
+        return roomItems.contains(item);
     }
     
     void getItems(String room) {
@@ -210,13 +257,14 @@ public class Space_Station_Text_Adventure
                 continue;
             }
             
-            minimumChars = Math.min(userInput.length(), 6);
+            String referenceString = "PICKUP";
+            minimumChars = Math.min(userInput.length(), referenceString.length());
             startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals("PICKUP")) {
+            if (startingChars.equals(referenceString)) {
                 // Make sure length is at least "PICKUP ".length();
-                if (userInput.length() >= 7) {
+                if (userInput.length() >= referenceString.length()+1) {
                     commandType = CommandType.PICKUP;
-                    String item = userInput.substring(7); // length of "PICKUP "
+                    String item = userInput.substring(referenceString.length()+1); // length of "PICKUP "
                     commandInstruction = item; 
                     validInput = true;
                     continue;
@@ -226,18 +274,53 @@ public class Space_Station_Text_Adventure
                 }  
             }
             
-            minimumChars = Math.min(userInput.length(), 4);
+            referenceString = "DROP";
+            minimumChars = Math.min(userInput.length(), referenceString.length());
             startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals("DROP")) {
+            if (startingChars.equals(referenceString)) {
                 // Make sure length is at least "DROP ".length();
-                if (userInput.length() >= 5) {
+                if (userInput.length() >= referenceString.length()+1) {
                     commandType = CommandType.DROP;
-                    String item = userInput.substring(5); // length of "DROP "
+                    String item = userInput.substring(referenceString.length()+1); // length of "DROP "
                     commandInstruction = item; 
                     validInput = true;
                     continue;
                 } else {
                     System.out.println("You cannot drop nothing!");
+                    continue;
+                }  
+            }
+            
+            referenceString = "USE";
+            minimumChars = Math.min(userInput.length(), referenceString.length());
+            startingChars = userInput.toUpperCase().substring(0, minimumChars);
+            if (startingChars.equals(referenceString)) {
+                // Make sure length is at least "USE ".length();
+                if (userInput.length() >= referenceString.length()+1) {
+                    commandType = CommandType.USE;
+                    String item = userInput.substring(referenceString.length()+1); // length of "DROP "
+                    commandInstruction = item; 
+                    validInput = true;
+                    continue;
+                } else {
+                    System.out.println("You cannot use nothing!");
+                    continue;
+                }  
+            }
+            
+            referenceString = "INTERACT";
+            minimumChars = Math.min(userInput.length(), referenceString.length());
+            startingChars = userInput.toUpperCase().substring(0, minimumChars);
+            if (startingChars.equals(referenceString)) {
+                // Make sure length is at least "INTERACT ".length();
+                if (userInput.length() >= referenceString.length()+1) {
+                    commandType = CommandType.INTERACT;
+                    String item = userInput.substring(referenceString.length()+1); // length of "DROP "
+                    commandInstruction = item; 
+                    validInput = true;
+                    continue;
+                } else {
+                    System.out.println("You cannot interact with nothing!");
                     continue;
                 }  
             }
@@ -265,7 +348,6 @@ public class Space_Station_Text_Adventure
         for (int fileIndex = 0; fileIndex < roomsFiles.length; fileIndex++) {
             String fileName = roomsFiles[fileIndex].getName();
             String roomName = fileName;
-            
             // DIRECTIONS
             
             directionDictionary.put(roomName, new Hashtable<>());
@@ -289,9 +371,9 @@ public class Space_Station_Text_Adventure
                     // Second word of each line is the destination
                     String startingRoom = roomName;
                     String direction = splitLine[0];
-                    String desitination = splitLine[1];
+                    String destination = splitLine[1];
                     //System.out.println("Adding" + direction + startingRoom);
-                    addDirection(startingRoom, direction, desitination);
+                    addDirection(startingRoom, direction, destination);
                 }
             }
             
@@ -334,12 +416,75 @@ public class Space_Station_Text_Adventure
                 // each line is an item name
                 String line = readFile.nextLine();
                 // add item to dictionary
-                System.out.println("ADDED " + line);
                 addItem(roomName, line);
             }
+            
+            // END OF ITEMS
+            
+            // Add each room to interactDictionary
+            interactDictionary.put(roomName, new Hashtable<>());
         }
         // Fake room inventory
         itemsDictionary.put("Inventory", new ArrayList<String>());
+        
+        // INTERACTABLES
+        // get the file for rooms
+        File interactablesFolder = new File("Interactables");
+        // Create a list of contained files
+        File[] interactablesFiles = interactablesFolder.listFiles();
+        Scanner readFile;
+        for (int i = 0; i < interactablesFiles.length; i++) {
+            String interactableName = interactablesFiles[i].getName();
+            // delete .txt from name
+            interactableName = interactableName.substring(0, interactableName.length()-4);
+            File currentInteractable = interactablesFiles[i];
+            try {
+                // Safely open the file
+                readFile = new Scanner(currentInteractable);
+            } catch (IOException error) {
+                error.printStackTrace();
+                // go to next file because opening has failed
+                continue;
+            }
+            int lineNum = 0;
+            String enabledText = null; // BlueJ does not like it when you don't initalise a value to String variables
+            String disabledText = null;
+            String room = null;
+            String startRoom = null;
+            String leadsTo = null;
+            String direction = null;
+            while (readFile.hasNextLine()) {
+                String line = readFile.nextLine();
+                lineNum++;
+                if (lineNum == 1) {
+                    // comments in file
+                    continue;
+                } else if (lineNum == 2) {
+                    // activated text
+                    enabledText = line;
+                } else if (lineNum == 3) {
+                    // deactivated text
+                    disabledText = line;
+                } else if (lineNum == 4) {
+                    // room to place
+                    room = line;
+                } else if (lineNum == 5) {
+                    // start room
+                    startRoom = line;
+                } else if (lineNum == 6) {
+                    // room unlocks
+                    leadsTo = line;
+                } else if (lineNum == 7) {
+                    // direction from start room
+                    direction = line;
+                }
+            }
+            if (enabledText != null && disabledText != null && room != null && startRoom != null && leadsTo != null && direction != null) {
+                addInteract(room, interactableName, direction, startRoom, leadsTo, enabledText, disabledText);
+            } else {
+                System.out.println("an error occurred with an interactable");
+            }
+        }
         
         
         // START MAIN GAME LOOP
@@ -351,6 +496,7 @@ public class Space_Station_Text_Adventure
             System.out.println("-".repeat(25));
             System.out.println("You are currently in " + currentRoom);
             System.out.println("");
+            printInteractsInRoom(currentRoom);
             printDirections();
             getItems(currentRoom);
             printInventory();
@@ -386,9 +532,51 @@ public class Space_Station_Text_Adventure
                 } else {
                     System.out.println("The item does not exist!");
                 }
+            } else if (commandType == CommandType.USE) {
+                String object = commandInstruction;
+                if (object.equals("potato") && hasItem("potato") && currentRoom.equals("ControlRoom")) {
+                    // game complete!
+                    gameComplete = true;
+                } else if (object.equals("picture frame") && hasItem("picture frame")) {
+                    System.out.println("there is a picture of a space shuttle launch");
+                    System.out.println("this spaceship was launched in 1977 and contained the voyager 1 probe which flew past saturn in 1980");
+                } else if (hasItem(commandInstruction)) {
+                    // holding the item but useless...
+                    System.out.println("It did nothing");
+                } else {
+                    // Not holding this
+                    System.out.println("You are not holding this...");
+                }
+            } else if (commandType == CommandType.INTERACT) {
+                String object = commandInstruction;
+                String[] info = getInteractInRoom(currentRoom, object);
+                if (info == null) {
+                    // not found
+                    System.out.println("The object does not exist");
+                } else {
+                    String startingRoom = info[0];
+                    String leadsTo = info[1];
+                    String direction = info[2];
+                    String enabledText = info[3];
+                    String disabledText = info[4];
+                    System.out.println(""); // formatting
+                    if (roomInDirection(startingRoom, direction) != null) {
+                        // already exists so revert changes
+                        System.out.println(disabledText);
+                        delDirection(startingRoom, direction);
+                    } else {
+                        System.out.println(enabledText);
+                        addDirection(startingRoom, direction, leadsTo);
+                    }
+                    System.out.println(""); // formatting
+                }
             } else {
+                // Idealy would never occur but just in case
                 System.out.println("an error occured");
             }
         }
+        System.out.println("The potato has powered the control panel!");
+        System.out.println("You successfully diverted the space station and are now safe from the meteor!");
+        System.out.println("Yay!");
     }
 }

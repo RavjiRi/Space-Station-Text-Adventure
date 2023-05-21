@@ -1,0 +1,7 @@
+Gravity switch to gain access to Storage Room
+Gravity was activated
+Gravity was deactivated
+EngineRoom
+Hub
+Storage Room
+up

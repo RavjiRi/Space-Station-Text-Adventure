@@ -1,0 +1,7 @@
+Keypad to gain access to Control Room
+The control room door is open!
+The control room door suddenly closed...
+Storage Room
+Hub
+ControlRoom
+north
