@@ -28,7 +28,8 @@ public class Space_Station_Text_Adventure
         PICKUP,
         DROP,
         INTERACT,
-        USE
+        USE,
+        HELP
     }
     
     Scanner keyboard = new Scanner(System.in);
@@ -41,6 +42,8 @@ public class Space_Station_Text_Adventure
     Dictionary<String, ArrayList<String>> itemsDictionary = new Hashtable<>();
     // Dictionary for interactables
     Dictionary<String, Dictionary> interactDictionary = new Hashtable<>();
+    // Dictionary for item descriptions
+    Dictionary<String, String> itemDescriptionDictionary = new Hashtable<>();
     
     // Methods to do with directions
     
@@ -101,6 +104,17 @@ public class Space_Station_Text_Adventure
         System.out.println("");
     }
     
+    void readItemDescription(String item) {
+        String itemDescription = itemDescriptionDictionary.get(item);
+        System.out.println("");
+        if (itemDescription == null) {
+            System.out.println("item description not found");
+        } else {
+            System.out.println(itemDescription);
+        }
+        System.out.println("");
+    }
+    
     // Interact methods
     
     void addInteract(String room, String interactName, String direction, String startRoom, String leadsTo, String enabledText, String disabledText) {
@@ -119,11 +133,14 @@ public class Space_Station_Text_Adventure
         Dictionary roomInteractables = interactDictionary.get(room);
         Enumeration <String> interactables = roomInteractables.keys();
         
-        System.out.println("You can interact with:");
-        
-        while (interactables.hasMoreElements()) {
-            String key = interactables.nextElement();
-            System.out.println(key);
+        // will just say "You can interact with:" then empty if no keys in dictionary
+        if (roomInteractables.size() > 0) {
+            System.out.println("You can interact with:");
+            while (interactables.hasMoreElements()) {
+                String key = interactables.nextElement();
+                System.out.println(key);
+            }
+            System.out.println(""); // formatting
         }
     }
     
@@ -179,8 +196,42 @@ public class Space_Station_Text_Adventure
     void printInventory() {
         ArrayList<String> roomItems = itemsDictionary.get("Inventory");
         System.out.println("Items in inventory:");
-        
+        // prints with square brackets but this is intentional because it looks better
         System.out.println(roomItems);
+    }
+    
+    // Instruction methods
+    void waitForInput() {
+        System.out.println("press enter to continue");
+        keyboard.nextLine();
+    }
+    
+    void howToPlay() {
+        System.out.println("There are 6 possible directions:");
+        // print each element in DIRECTIONSLIST
+        for (String direction: DIRECTIONSLIST) {
+            System.out.println(direction);
+        }
+        waitForInput();
+        System.out.println("to get the description of the current room, type 'description'");
+        System.out.println("for the description of an item, type the 'USE ' and items name");
+        waitForInput();
+        System.out.println("pick up an item with, 'pickup ' and item name");
+        System.out.println("drop and item with 'drop ' and item name");
+        waitForInput();
+        System.out.println("to interact, type 'interact ' and item name");
+        waitForInput();
+        System.out.println("if you need to see the command list again, type 'help'");
+        waitForInput();
+    }
+    
+    void introduction() {
+        System.out.println("You are on a space station and your crew have left");
+        System.out.println("they don't tell you why but when you look out the window, a large meteorite is headed in your way");
+        waitForInput();
+        System.out.println("You must find a way into the control room and use the control panel");
+        System.out.println("Once the panel is on, the automatic steering system will avoid the meteor");
+        waitForInput();
     }
     
     // Command methods
@@ -325,6 +376,15 @@ public class Space_Station_Text_Adventure
                 }  
             }
             
+            referenceString = "HELP";
+            minimumChars = Math.min(userInput.length(), referenceString.length());
+            startingChars = userInput.toUpperCase().substring(0, minimumChars);
+            if (startingChars.equals(referenceString)) {
+                commandType = CommandType.HELP;
+                validInput = true;
+                continue;
+            }
+            
             if (!validInput) {
                 System.out.println("Not a command");
             }
@@ -428,7 +488,7 @@ public class Space_Station_Text_Adventure
         itemsDictionary.put("Inventory", new ArrayList<String>());
         
         // INTERACTABLES
-        // get the file for rooms
+        // get the file for interactables
         File interactablesFolder = new File("Interactables");
         // Create a list of contained files
         File[] interactablesFiles = interactablesFolder.listFiles();
@@ -487,6 +547,42 @@ public class Space_Station_Text_Adventure
         }
         
         
+        // ITEM DESCRIPTIONS
+        // get the file for item descriptions
+        File itemDescriptFolder = new File("ItemDescriptions");
+        // Create a list of contained files
+        File[] itemDescriptFiles = itemDescriptFolder.listFiles();
+        //Scanner readFile;
+        for (int i = 0; i < itemDescriptFiles.length; i++) {
+            String itemName = itemDescriptFiles[i].getName();
+            // delete .txt from name
+            itemName = itemName.substring(0, itemName.length()-4);
+            File currentItem = itemDescriptFiles[i];
+            try {
+                // Safely open the file
+                readFile = new Scanner(currentItem);
+            } catch (IOException error) {
+                error.printStackTrace();
+                // go to next file because opening has failed
+                continue;
+            }
+            int lineNum = 0;
+            String description = "";
+            while (readFile.hasNextLine()) {
+                // need to add newline character or it will be one big line
+                description += "\n"+readFile.nextLine();
+            }
+            itemDescriptionDictionary.put(itemName, description);
+        }
+        
+        // INSTRUCTIONS
+        if (false) {
+            howToPlay();
+            introduction();
+        }
+        
+        
+        
         // START MAIN GAME LOOP
         
         boolean gameComplete = false;
@@ -511,6 +607,14 @@ public class Space_Station_Text_Adventure
                     System.out.println("Moving " + direction);
                 } else {
                     System.out.println("No room in this direction!");
+                }
+                // SPECIAL CONDITION: tell the player that they need to fix control panel
+                if (currentRoom.equals("ControlRoom")) {
+                    System.out.println("The control panel is damaged...");
+                    System.out.println("find a replacement for the broken battery");
+                    System.out.println("HINT: 'use' the item when you have it in the control room");
+                    System.out.println("press enter to continue");
+                    keyboard.nextLine(); // wait for user to read
                 }
             } else if (commandType == CommandType.DESCRIPTION) {
                 readDescription(currentRoom);
@@ -537,12 +641,17 @@ public class Space_Station_Text_Adventure
                 if (object.equals("potato") && hasItem("potato") && currentRoom.equals("ControlRoom")) {
                     // game complete!
                     gameComplete = true;
-                } else if (object.equals("picture frame") && hasItem("picture frame")) {
-                    System.out.println("there is a picture of a space shuttle launch");
-                    System.out.println("this spaceship was launched in 1977 and contained the voyager 1 probe which flew past saturn in 1980");
+                } else if (object.equals("battery") && hasItem("battery") && currentRoom.equals("ControlRoom")) {
+                    System.out.println("its a 0 volt battery...");
+                    System.out.println("not enough charge to power the control panel");
+                } else if (object.equals("jetpack") && hasItem("jetpack") && currentRoom.equals("Space")) {
+                    System.out.println("you flew back to the space station!");
+                    removeInventory(object);
+                    currentRoom = "Entrance";
                 } else if (hasItem(commandInstruction)) {
                     // holding the item but useless...
                     System.out.println("It did nothing");
+                    readItemDescription(object);
                 } else {
                     // Not holding this
                     System.out.println("You are not holding this...");
@@ -570,6 +679,8 @@ public class Space_Station_Text_Adventure
                     }
                     System.out.println(""); // formatting
                 }
+            } else if (commandType == CommandType.HELP) {
+                howToPlay();
             } else {
                 // Idealy would never occur but just in case
                 System.out.println("an error occured");
