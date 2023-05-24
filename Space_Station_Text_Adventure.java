@@ -18,6 +18,10 @@ import java.util.Enumeration; // Goes with Dictionary AND for making enums
 
 public class Space_Station_Text_Adventure
 {
+    // Test for main
+    //public static void main(String[] args) {
+    //    System.out.println("lalalalal");
+    //}
     // Create list which contains list of possible directions to check whether a direction is possible
     String[] DIRECTIONSLIST = {"north", "south", "east", "west", "up", "down"};
     String currentRoom = "Entrance"; // Starting room
@@ -44,7 +48,28 @@ public class Space_Station_Text_Adventure
     Dictionary<String, Dictionary> interactDictionary = new Hashtable<>();
     // Dictionary for item descriptions
     Dictionary<String, String> itemDescriptionDictionary = new Hashtable<>();
+    // Dictionary for item descriptions
+    Dictionary<String, String> coloursDictionary = new Hashtable<>();
     
+    // Methods to do with colours
+    
+    void initColours() {
+        // Add pre-defined ansi colour codes
+        coloursDictionary.put("BLACK", "\u001B[30m");
+        coloursDictionary.put("RED", "\u001b[31m"); // use for errors
+        coloursDictionary.put("GREEN", "\u001b[32m");
+        coloursDictionary.put("YELLOW", "\u001b[33m"); // use for warnings
+        coloursDictionary.put("BLUE", "\u001b[34m");
+        coloursDictionary.put("MAGENTA", "\u001B[35m");
+        coloursDictionary.put("CYAN", "\u001b[36m");
+        coloursDictionary.put("WHITE", "\u001b[37m");
+        coloursDictionary.put("RESET", "\u001b[38m"); // stop ansi colouring
+    }
+    
+    String getColour(String colour) {
+        return coloursDictionary.get(colour);
+    }
+
     // Methods to do with directions
     
     void addDirection(String room, String direction, String leadsTo) {
@@ -122,7 +147,6 @@ public class Space_Station_Text_Adventure
         
         // Get all current items in room
         Dictionary<String, String[]> roomInteractables= interactDictionary.get(room);
-        //roomInteractables.put(new Hashtable<>());
         
         String[] interactInfo = {startRoom, leadsTo, direction, enabledText, disabledText};
         roomInteractables.put(interactName, interactInfo);
@@ -261,7 +285,6 @@ public class Space_Station_Text_Adventure
             if (isDirection) {
                 commandInstruction = userInput.toLowerCase(); 
                 commandType = CommandType.DIRECTION;
-                //commandType = "direction";
                 validInput = true;
             } else {
                 // Shortcuts
@@ -383,6 +406,20 @@ public class Space_Station_Text_Adventure
                 commandType = CommandType.HELP;
                 validInput = true;
                 continue;
+            }
+            
+            // TESTING - more cleaner way to iterate though enums and compare
+            
+            for (CommandType type: CommandType.values()) {
+                System.out.println(type.name());
+                referenceString = type.name();
+                minimumChars = Math.min(userInput.length(), referenceString.length());
+                startingChars = userInput.toUpperCase().substring(0, minimumChars);
+                if (startingChars.equals(referenceString)) {
+                    commandType = type;
+                    validInput = true;
+                    continue;
+                }
             }
             
             if (!validInput) {
@@ -581,7 +618,7 @@ public class Space_Station_Text_Adventure
             introduction();
         }
         
-        
+        initColours();
         
         // START MAIN GAME LOOP
         
@@ -590,7 +627,7 @@ public class Space_Station_Text_Adventure
         while (!gameComplete) {
             // Separator between last action
             System.out.println("-".repeat(25));
-            System.out.println("You are currently in " + currentRoom);
+            System.out.println(getColour("GREEN") + "You are currently in " + currentRoom + getColour("RESET"));
             System.out.println("");
             printInteractsInRoom(currentRoom);
             printDirections();
@@ -688,6 +725,6 @@ public class Space_Station_Text_Adventure
         }
         System.out.println("The potato has powered the control panel!");
         System.out.println("You successfully diverted the space station and are now safe from the meteor!");
-        System.out.println("Yay!");
+        System.out.println("Congratulations!");
     }
 }
