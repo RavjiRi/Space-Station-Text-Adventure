@@ -318,104 +318,21 @@ public class Space_Station_Text_Adventure
                 continue;
             }
             
-            // Checks if command is to pick up
-            
-            // Get minimum of string length or 11 otherwise getting
-            // first 11 characters will error if length < 11
-            int minimumChars = Math.min(userInput.length(), 11);
-            String startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            
-            if (startingChars.equals("DESCRIPTION")) {
-                commandType = CommandType.DESCRIPTION;
-                validInput = true;
-                continue;
-            }
-            
-            String referenceString = "PICKUP";
-            minimumChars = Math.min(userInput.length(), referenceString.length());
-            startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals(referenceString)) {
-                // Make sure length is at least "PICKUP ".length();
-                if (userInput.length() >= referenceString.length()+1) {
-                    commandType = CommandType.PICKUP;
-                    String item = userInput.substring(referenceString.length()+1); // length of "PICKUP "
-                    commandInstruction = item; 
-                    validInput = true;
-                    continue;
-                } else {
-                    System.out.println("You cannot pickup nothing!");
-                    continue;
-                }  
-            }
-            
-            referenceString = "DROP";
-            minimumChars = Math.min(userInput.length(), referenceString.length());
-            startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals(referenceString)) {
-                // Make sure length is at least "DROP ".length();
-                if (userInput.length() >= referenceString.length()+1) {
-                    commandType = CommandType.DROP;
-                    String item = userInput.substring(referenceString.length()+1); // length of "DROP "
-                    commandInstruction = item; 
-                    validInput = true;
-                    continue;
-                } else {
-                    System.out.println("You cannot drop nothing!");
-                    continue;
-                }  
-            }
-            
-            referenceString = "USE";
-            minimumChars = Math.min(userInput.length(), referenceString.length());
-            startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals(referenceString)) {
-                // Make sure length is at least "USE ".length();
-                if (userInput.length() >= referenceString.length()+1) {
-                    commandType = CommandType.USE;
-                    String item = userInput.substring(referenceString.length()+1); // length of "DROP "
-                    commandInstruction = item; 
-                    validInput = true;
-                    continue;
-                } else {
-                    System.out.println("You cannot use nothing!");
-                    continue;
-                }  
-            }
-            
-            referenceString = "INTERACT";
-            minimumChars = Math.min(userInput.length(), referenceString.length());
-            startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals(referenceString)) {
-                // Make sure length is at least "INTERACT ".length();
-                if (userInput.length() >= referenceString.length()+1) {
-                    commandType = CommandType.INTERACT;
-                    String item = userInput.substring(referenceString.length()+1); // length of "DROP "
-                    commandInstruction = item; 
-                    validInput = true;
-                    continue;
-                } else {
-                    System.out.println("You cannot interact with nothing!");
-                    continue;
-                }  
-            }
-            
-            referenceString = "HELP";
-            minimumChars = Math.min(userInput.length(), referenceString.length());
-            startingChars = userInput.toUpperCase().substring(0, minimumChars);
-            if (startingChars.equals(referenceString)) {
-                commandType = CommandType.HELP;
-                validInput = true;
-                continue;
-            }
-            
-            // TESTING - more cleaner way to iterate though enums and compare
+            // more cleaner way to iterate though enums and compare
             
             for (CommandType type: CommandType.values()) {
-                System.out.println(type.name());
-                referenceString = type.name();
-                minimumChars = Math.min(userInput.length(), referenceString.length());
-                startingChars = userInput.toUpperCase().substring(0, minimumChars);
+                String referenceString = type.name();
+                // Get minimum of userInput length or referenceString length otherwise getting
+                // first userInput length + 1 characters will error if length < userInput length + 1
+                int minimumChars = Math.min(userInput.length(), referenceString.length());
+                String startingChars = userInput.toUpperCase().substring(0, minimumChars);
                 if (startingChars.equals(referenceString)) {
+                    String item = "";
+                    if (userInput.length() >= referenceString.length()+1) {
+                        item = userInput.substring(referenceString.length()+1); // length of comparison word + space
+                        // .substring will error if just typed "DROP" and not "DROP " unless you check with if statement first
+                    }
+                    commandInstruction = item;
                     commandType = type;
                     validInput = true;
                     continue;
@@ -455,9 +372,12 @@ public class Space_Station_Text_Adventure
                 // Safely open the file
                 readFile = new Scanner(directionsFile);
             } catch (IOException error) {
+                System.out.println("Could not open the file containing directions for " + roomName);
+                System.out.println("file path: "+directionsFile.getAbsolutePath());
+                System.out.println(error.getClass().getCanonicalName());
                 error.printStackTrace();
-                // go to next file because opening has failed
-                continue;
+                // stop because directions are an essential part of the program
+                return;
             }
             while (readFile.hasNextLine()) {
                 // New directions dictionary for each room
@@ -469,7 +389,6 @@ public class Space_Station_Text_Adventure
                     String startingRoom = roomName;
                     String direction = splitLine[0];
                     String destination = splitLine[1];
-                    //System.out.println("Adding" + direction + startingRoom);
                     addDirection(startingRoom, direction, destination);
                 }
             }
@@ -483,9 +402,10 @@ public class Space_Station_Text_Adventure
                 // Safely open the file
                 readFile = new Scanner(descriptionFile);
             } catch (IOException error) {
-                error.printStackTrace();
-                // go to next file because opening has failed
-                continue;
+                System.out.println("failed to load description for " + roomName);
+                System.out.println(error.getClass().getCanonicalName());
+                //error.printStackTrace();
+                // continue because opening has failed and non essential part of text adventure
             }
             String roomDesc = "";
             while (readFile.hasNextLine()) {
@@ -503,9 +423,12 @@ public class Space_Station_Text_Adventure
                 // Safely open the file
                 readFile = new Scanner(itemsFile);
             } catch (IOException error) {
+                System.out.println("Could not open the file containing item for " + roomName);
+                System.out.println("file path: "+itemsFile.getAbsolutePath());
+                System.out.println(error.getClass().getCanonicalName());
                 error.printStackTrace();
-                // go to next file because opening has failed
-                continue;
+                // stop because directions are an essential part of the program
+                return;
             }
             // New ArrayList to store items
             itemsDictionary.put(roomName, new ArrayList<String>());
@@ -539,9 +462,12 @@ public class Space_Station_Text_Adventure
                 // Safely open the file
                 readFile = new Scanner(currentInteractable);
             } catch (IOException error) {
+                System.out.println("Could not open the file containing interactable " + interactableName);
+                System.out.println("file path: "+currentInteractable.getAbsolutePath());
+                System.out.println(error.getClass().getCanonicalName());
                 error.printStackTrace();
-                // go to next file because opening has failed
-                continue;
+                // stop because directions are an essential part of the program
+                return;
             }
             int lineNum = 0;
             String enabledText = null; // BlueJ does not like it when you don't initalise a value to String variables
@@ -599,8 +525,10 @@ public class Space_Station_Text_Adventure
                 // Safely open the file
                 readFile = new Scanner(currentItem);
             } catch (IOException error) {
-                error.printStackTrace();
-                // go to next file because opening has failed
+                System.out.println("failed to load description for " + itemName);
+                System.out.println(error.getClass().getCanonicalName());
+                //error.printStackTrace();
+                // continue because opening has failed and non essential part of text adventure
                 continue;
             }
             int lineNum = 0;
@@ -627,7 +555,7 @@ public class Space_Station_Text_Adventure
         while (!gameComplete) {
             // Separator between last action
             System.out.println("-".repeat(25));
-            System.out.println(getColour("GREEN") + "You are currently in " + currentRoom + getColour("RESET"));
+            System.out.println("You are currently in " + currentRoom);
             System.out.println("");
             printInteractsInRoom(currentRoom);
             printDirections();
