@@ -279,11 +279,27 @@ public class Space_Station_Text_Adventure
             System.out.println("Input a direction");
             String userInput = keyboard.nextLine();
             
+            // if direction was found out of context
+            // for example: "123 north 56789" would make directionInInput = true
+            boolean directionInInput = false;
+            String dir = "";
+            for (String inputPart: userInput.toLowerCase().split(" ")) {
+                if (Arrays.asList(DIRECTIONSLIST).contains(inputPart)) {
+                    System.out.println("direction!");
+                    directionInInput = true;
+                    dir = inputPart;
+                }
+            }
+            
             // Checks if input is a direction
             // if user types "north" move north, not "move north"
             boolean isDirection = Arrays.asList(DIRECTIONSLIST).contains(userInput.toLowerCase());
             if (isDirection) {
                 commandInstruction = userInput.toLowerCase(); 
+                commandType = CommandType.DIRECTION;
+                validInput = true;
+            } else if (directionInInput) {
+                commandInstruction = dir; 
                 commandType = CommandType.DIRECTION;
                 validInput = true;
             } else {
