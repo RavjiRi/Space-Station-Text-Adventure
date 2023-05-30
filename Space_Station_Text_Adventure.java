@@ -3,7 +3,7 @@
  * with a meteor
  *
  * @author Ritesh Ravji
- * @version 4/5/23
+ * @version 30/4/23
  */
 
 import java.util.Scanner; // Read keyboard
@@ -18,10 +18,6 @@ import java.util.Enumeration; // Goes with Dictionary AND for making enums
 
 public class Space_Station_Text_Adventure
 {
-    // Test for main
-    //public static void main(String[] args) {
-    //    System.out.println("lalalalal");
-    //}
     // Create list which contains list of possible directions to check whether a direction is possible
     String[] DIRECTIONSLIST = {"north", "south", "east", "west", "up", "down"};
     String currentRoom = "Entrance"; // Starting room
@@ -34,6 +30,12 @@ public class Space_Station_Text_Adventure
         INTERACT,
         USE,
         HELP
+    }
+    
+    enum OnInteract {
+        HINT,
+        TELEPORT,
+        COMPLETEGAME
     }
     
     Scanner keyboard = new Scanner(System.in);
@@ -50,6 +52,17 @@ public class Space_Station_Text_Adventure
     Dictionary<String, String> itemDescriptionDictionary = new Hashtable<>();
     // Dictionary for item descriptions
     Dictionary<String, String> coloursDictionary = new Hashtable<>();
+    // Dictionary with text explanation for a new room
+    Dictionary<String, String> NewRoomDictionary = new Hashtable<>();
+    
+    // Methods to do with new rooms
+    void addRoomSequence(String room, String toPrint) {
+        NewRoomDictionary.put(room, toPrint);
+    }
+    
+    String hasRoomSequence(String room) {
+        return NewRoomDictionary.get(room);
+    }
     
     // Methods to do with colours
     
@@ -276,7 +289,7 @@ public class Space_Station_Text_Adventure
         CommandType commandType = null;
         boolean validInput = false;
         while (!validInput) {
-            System.out.println("Input a direction");
+            System.out.println("Input a command");
             String userInput = keyboard.nextLine();
             
             // Checks if input is a direction
@@ -322,8 +335,9 @@ public class Space_Station_Text_Adventure
             
             for (CommandType type: CommandType.values()) {
                 String referenceString = type.name();
-                // Get minimum of userInput length or referenceString length otherwise getting
-                // first userInput length + 1 characters will error if length < userInput length + 1
+                
+                // Get minimum of userInput length or referenceString length
+                // otherwise IndexOutOfBounds exception if referenceString.length() > userInput.length()
                 int minimumChars = Math.min(userInput.length(), referenceString.length());
                 String startingChars = userInput.toUpperCase().substring(0, minimumChars);
                 if (startingChars.equals(referenceString)) {
@@ -353,7 +367,6 @@ public class Space_Station_Text_Adventure
     public Space_Station_Text_Adventure()
     {
         // INITALISE VARIABLES
-        
         // get the file for rooms
         File roomFolder = new File("Rooms");
         // Create a list of contained files
@@ -540,6 +553,67 @@ public class Space_Station_Text_Adventure
             itemDescriptionDictionary.put(itemName, description);
         }
         
+        // NEW ROOM SEQUENCES
+        // get the file for room sequences
+        File roomSequenceFolder = new File("NewRoomSequence");
+        // Create a list of contained files
+        File[] roomSequenceFiles = roomSequenceFolder.listFiles();
+        for (File roomFile: roomSequenceFiles) {
+            String roomName = roomFile.getName();
+            // delete .txt from name
+            roomName = roomName.substring(0, roomName.length()-4);
+            try {
+                // Safely open the file
+                readFile = new Scanner(roomFile);
+            } catch (IOException error) {
+                System.out.println("failed to load sequence for " + roomName);
+                System.out.println(error.getClass().getCanonicalName());
+                //error.printStackTrace();
+                // continue because opening has failed and non essential part of text adventure
+                continue;
+            }
+            String sequence = "";
+            while (readFile.hasNextLine()) {
+                // need to add newline character or it will be one big line
+                sequence += readFile.nextLine() + "\n";
+            }
+            addRoomSequence(roomName, sequence);
+        }
+        
+        // USE ITEMS
+        // get the file for room sequences
+        File useItemsFolder = new File("UseItems");
+        // Create a list of contained files
+        File[] useItemsFiles = useItemsFolder.listFiles();
+        for (File itemFile: useItemsFiles) {
+            String itemName = itemFile.getName();
+            // delete .txt from name
+            itemName = itemName.substring(0, itemName.length()-4);
+            try {
+                // Safely open the file
+                readFile = new Scanner(itemFile);
+            } catch (IOException error) {
+                System.out.println("failed to load item actions for " + itemName);
+                System.out.println(error.getClass().getCanonicalName());
+                //error.printStackTrace();
+                // continue because opening has failed and non essential part of text adventure
+                continue;
+            }
+            int line = 0;
+            String EnumType = "";
+            String toPrint = "";
+            while (readFile.hasNextLine()) {
+                line++;
+                if (line == 1) {
+                    EnumType = readFile.nextLine();
+                } else {
+                    // need to add newline character or it will be one big line
+                    toPrint += readFile.nextLine() + "\n";
+                }
+            }
+        }
+        
+        
         // INSTRUCTIONS
         if (false) {
             howToPlay();
@@ -574,12 +648,12 @@ public class Space_Station_Text_Adventure
                     System.out.println("No room in this direction!");
                 }
                 // SPECIAL CONDITION: tell the player that they need to fix control panel
-                if (currentRoom.equals("ControlRoom")) {
-                    System.out.println("The control panel is damaged...");
-                    System.out.println("find a replacement for the broken battery");
-                    System.out.println("HINT: 'use' the item when you have it in the control room");
-                    System.out.println("press enter to continue");
-                    keyboard.nextLine(); // wait for user to read
+                String sequence = hasRoomSequence(currentRoom);
+                if (sequence != null) {
+                    // exists
+                    System.out.println(""); // formatting
+                    System.out.println(sequence);
+                    waitForInput(); 
                 }
             } else if (commandType == CommandType.DESCRIPTION) {
                 readDescription(currentRoom);
