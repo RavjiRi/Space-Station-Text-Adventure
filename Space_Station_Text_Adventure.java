@@ -3,7 +3,7 @@
  * with a meteor
  *
  * @author Ritesh Ravji
- * @version 30/4/23
+ * @version 8/6/23
  */
 
 import java.util.Scanner; // Read keyboard
@@ -33,9 +33,9 @@ public class Space_Station_Text_Adventure
     }
     
     enum OnInteract {
-        HINT,
-        TELEPORT,
-        COMPLETEGAME
+        HINT, // like a description but for when in specific rooms
+        TELEPORT, // move to a different room
+        COMPLETEGAME // complete game
     }
     
     Scanner keyboard = new Scanner(System.in);
@@ -54,6 +54,39 @@ public class Space_Station_Text_Adventure
     Dictionary<String, String> coloursDictionary = new Hashtable<>();
     // Dictionary with text explanation for a new room
     Dictionary<String, String> NewRoomDictionary = new Hashtable<>();
+    // Dictionary with enum and extra info from use items
+    Dictionary<String, String[]> UseItemsDictionary = new Hashtable<>();
+    
+    void clearScreen() {
+        System.out.println("\u000C");
+    }
+    
+    // Methods to do with using items
+    
+    void addUseItem(String itemName, String enumType, String roomName, String extraInfo) {
+        // extra info depends on enum type:
+        // if enum is TELEPORT then extra info is a description of teleport
+        // if enum is COMPLETEGAME then extra info is not needed
+        boolean enumExists = false;
+        try {
+            OnInteract.valueOf(enumType); // check that the enum type exists
+            enumExists = true;
+        } catch (IllegalArgumentException e) {
+            // Enum does not exist
+            System.out.println("An error occured with an item");
+            System.out.println("it may be impossible to complete the game");
+            //System.out.println(e);
+        }
+        if (enumExists) {
+            String[] contents = {enumType, roomName, extraInfo};
+            UseItemsDictionary.put(itemName, contents);
+        }
+        return;
+    }
+    
+    String[] getUseItem(String itemName) {
+        return UseItemsDictionary.get(itemName);
+    }
     
     // Methods to do with new rooms
     void addRoomSequence(String room, String toPrint) {
@@ -251,10 +284,11 @@ public class Space_Station_Text_Adventure
         }
         waitForInput();
         System.out.println("to get the description of the current room, type 'description'");
-        System.out.println("for the description of an item, type the 'USE ' and items name");
+        System.out.println("for the description of an item, type the 'description ' and items name");
         waitForInput();
         System.out.println("pick up an item with, 'pickup ' and item name");
-        System.out.println("drop and item with 'drop ' and item name");
+        System.out.println("drop an item with 'drop ' and item name");
+        System.out.println("use an item with 'use ' and item name");
         waitForInput();
         System.out.println("to interact, type 'interact ' and item name");
         waitForInput();
@@ -581,7 +615,7 @@ public class Space_Station_Text_Adventure
         }
         
         // USE ITEMS
-        // get the file for room sequences
+        // get the file for use items
         File useItemsFolder = new File("UseItems");
         // Create a list of contained files
         File[] useItemsFiles = useItemsFolder.listFiles();
@@ -600,17 +634,26 @@ public class Space_Station_Text_Adventure
                 continue;
             }
             int line = 0;
-            String EnumType = "";
-            String toPrint = "";
+            String enumType = "";
+            String roomName = "";
+            String extraInfo = "";
+            
             while (readFile.hasNextLine()) {
                 line++;
                 if (line == 1) {
-                    EnumType = readFile.nextLine();
+                    enumType = readFile.nextLine();
+                } else if (line == 2) {
+                    roomName = readFile.nextLine();
                 } else {
                     // need to add newline character or it will be one big line
-                    toPrint += readFile.nextLine() + "\n";
+                    extraInfo += readFile.nextLine();
+                    if (readFile.hasNextLine()) {
+                        // only add newline if there is another line
+                        extraInfo += "\n";
+                    }
                 }
             }
+            addUseItem(itemName, enumType, roomName, extraInfo);
         }
         
         
@@ -647,7 +690,7 @@ public class Space_Station_Text_Adventure
                 } else {
                     System.out.println("No room in this direction!");
                 }
-                // SPECIAL CONDITION: tell the player that they need to fix control panel
+                // Check for "room sequence", like a cutscene to tell the player extra useful info
                 String sequence = hasRoomSequence(currentRoom);
                 if (sequence != null) {
                     // exists
@@ -656,7 +699,13 @@ public class Space_Station_Text_Adventure
                     waitForInput(); 
                 }
             } else if (commandType == CommandType.DESCRIPTION) {
-                readDescription(currentRoom);
+                if (commandInstruction == "") {
+                    readDescription(currentRoom);
+                } else if (hasItem(commandInstruction)) {
+                    readItemDescription(commandInstruction);
+                } else {
+                    System.out.println("You do not have this item...");
+                }
             } else if (commandType == CommandType.PICKUP) {
                 String item = commandInstruction;
                 boolean success = removeItem(currentRoom, item);
@@ -677,20 +726,24 @@ public class Space_Station_Text_Adventure
                 }
             } else if (commandType == CommandType.USE) {
                 String object = commandInstruction;
-                if (object.equals("potato") && hasItem("potato") && currentRoom.equals("ControlRoom")) {
-                    // game complete!
-                    gameComplete = true;
-                } else if (object.equals("battery") && hasItem("battery") && currentRoom.equals("ControlRoom")) {
-                    System.out.println("its a 0 volt battery...");
-                    System.out.println("not enough charge to power the control panel");
-                } else if (object.equals("jetpack") && hasItem("jetpack") && currentRoom.equals("Space")) {
-                    System.out.println("you flew back to the space station!");
-                    removeInventory(object);
-                    currentRoom = "Entrance";
-                } else if (hasItem(commandInstruction)) {
-                    // holding the item but useless...
-                    System.out.println("It did nothing");
-                    readItemDescription(object);
+                String[] useItemInfo = getUseItem(object);
+                OnInteract itemEnum = OnInteract.valueOf(useItemInfo[0]); // get enum as string and change to enum
+                String roomName = useItemInfo[1];
+                String extraInfo = useItemInfo[2];
+                
+                // check the user is using an item they are actually holding
+                if (hasItem(object)) {
+                    if (itemEnum == OnInteract.COMPLETEGAME && currentRoom.equals(roomName)) {
+                        gameComplete = true;
+                    } else if (itemEnum == OnInteract.TELEPORT && currentRoom.equals(roomName)) {
+                        System.out.println(extraInfo);
+                        removeInventory(object);
+                        currentRoom = "Entrance";
+                    } else if (itemEnum == OnInteract.HINT && currentRoom.equals(roomName)) {
+                        System.out.println(extraInfo);
+                    } else {
+                        System.out.println("It did nothing");
+                    }
                 } else {
                     // Not holding this
                     System.out.println("You are not holding this...");
@@ -726,7 +779,7 @@ public class Space_Station_Text_Adventure
             }
         }
         System.out.println("The potato has powered the control panel!");
-        System.out.println("You successfully diverted the space station and are now safe from the meteor!");
+        System.out.println("You successfully diverted the space station and are now safe from the meteor");
         System.out.println("Congratulations!");
     }
 }

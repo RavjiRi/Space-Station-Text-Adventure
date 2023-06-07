@@ -1,0 +1,4 @@
+HINT
+ControlRoom
+its a 0 volt battery...
+not enough charge to power the control panel
