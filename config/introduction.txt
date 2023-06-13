@@ -1,0 +1,6 @@
+You are on a space station and your crew have left
+they don't tell you why but when you look out the window, a large meteorite is headed in your way
+waitForInput();
+You must find a way into the control room and use the control panel
+Once the panel is on, the automatic steering system will avoid the meteor
+waitForInput();
