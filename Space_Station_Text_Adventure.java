@@ -486,7 +486,7 @@ public class Space_Station_Text_Adventure
     
     String[] getInteractInRoom(String room, String interactName) {
         Dictionary<String, String[]> roomInteractables = interactDictionary.get(room);
-        String[] interactInfo = roomInteractables.get(interactName);
+        String[] interactInfo = roomInteractables.get(interactName.toLowerCase());
         return interactInfo;
     }
     
@@ -756,6 +756,7 @@ public class Space_Station_Text_Adventure
         while (!gameComplete) {
             // Separator between last action
             System.out.println("-".repeat(25));
+            //clearScreen();
             System.out.println("You are currently in " + currentRoom);
             System.out.println("");
             printInteractsInRoom(currentRoom);
