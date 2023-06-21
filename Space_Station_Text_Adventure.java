@@ -29,7 +29,8 @@ public class Space_Station_Text_Adventure
         DROP,
         INTERACT,
         USE,
-        HELP
+        HELP,
+        SETTING
     }
     
     enum OnInteract {
@@ -88,8 +89,12 @@ public class Space_Station_Text_Adventure
             }
             String text = "";
             while (readFile.hasNextLine()) {
+                text += readFile.nextLine();
                 // need to add newline character or it will be one big line
-                text += readFile.nextLine() + "\n";
+                // check if another line otherwise there will be a newline at end of string
+                if (readFile.hasNextLine()) {
+                    text += "\n";
+                }
             }
             configurations.put(propertyName, text);
         }
@@ -588,6 +593,8 @@ public class Space_Station_Text_Adventure
         waitForInput();
         System.out.println("to interact, type 'interact ' and item name");
         waitForInput();
+        System.out.println("to toggle clear screen, type 'setting clearScreen (true/false)'");
+        waitForInput();
         System.out.println("if you need to see the command list again, type 'help'");
         waitForInput();
     }
@@ -609,11 +616,11 @@ public class Space_Station_Text_Adventure
     
     // Return result of returnCommand
     class CommandResult {
-        CommandType Type;
-        String Instructions;
-        CommandResult(CommandType EnumCommandType, String CommandInstructions) {
-            this.Type = EnumCommandType;
-            this.Instructions = CommandInstructions;
+        CommandType type;
+        String instructions;
+        CommandResult(CommandType enumCommandType, String commandInstructions) {
+            this.type = enumCommandType;
+            this.instructions = commandInstructions;
         }
     }
     
@@ -746,7 +753,7 @@ public class Space_Station_Text_Adventure
         if (false) {
             howToPlay();
             introduction();
-            // add part to clear screen
+            clearScreen();
         }
         
         // START MAIN GAME LOOP
@@ -756,7 +763,6 @@ public class Space_Station_Text_Adventure
         while (!gameComplete) {
             // Separator between last action
             System.out.println("-".repeat(25));
-            //clearScreen();
             System.out.println("You are currently in " + currentRoom);
             System.out.println("");
             printInteractsInRoom(currentRoom);
@@ -764,8 +770,16 @@ public class Space_Station_Text_Adventure
             printItemsInRoom(currentRoom);
             printInventory();
             CommandResult command = returnCommand();
-            CommandType commandType = command.Type; // enum
-            String commandInstruction = command.Instructions; // extra instructions
+            CommandType commandType = command.type; // enum
+            String commandInstruction = command.instructions; // extra instructions
+            if (Boolean.parseBoolean(configurations.get("clearScreen"))) {
+                /* IF clearScreen == "true":
+                 * clear screen
+                 * ELSEIF clearScreen == "false" or null (not found in config folder, turns into false in parseBoolean):
+                 * continue
+                 */
+                clearScreen();
+            }
             if (commandType == CommandType.DIRECTION) {
                 String direction = commandInstruction;
                 
@@ -871,6 +885,22 @@ public class Space_Station_Text_Adventure
                 }
             } else if (commandType == CommandType.HELP) {
                 howToPlay();
+            } else if (commandType == CommandType.SETTING) {
+                String[] settingArr = commandInstruction.split(" ");
+                if (settingArr.length == 2) {
+                    String setting = settingArr[0];
+                    String value = settingArr[1];
+                    if (configurations.get(setting) != null) {
+                        // setting already has a value so change
+                        configurations.put(setting, value);
+                        System.out.println("setting changed");
+                    } else {
+                        // setting not found
+                        System.out.println("no setting found");
+                    }
+                } else {
+                    System.out.println("incorrect parameters, please use setting 'setting name' 'setting value'");
+                }
             } else {
                 // Idealy would never occur but just in case
                 System.out.println("an error occured");
