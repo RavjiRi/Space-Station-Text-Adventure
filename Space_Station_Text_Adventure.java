@@ -3,7 +3,7 @@
  * with a meteor
  *
  * @author Ritesh Ravji
- * @version 8/6/23
+ * @version 26/6/23
  */
 
 import java.util.Scanner; // Read keyboard
@@ -19,8 +19,9 @@ import java.util.Enumeration; // Goes with Dictionary AND for making enums
 public class Space_Station_Text_Adventure
 {
     // Create list which contains list of possible directions to check whether a direction is possible
-    String[] DIRECTIONSLIST = {"north", "south", "east", "west", "up", "down"};
-    String currentRoom = "Entrance"; // Starting room
+    final String[] DIRECTIONSLIST = {"north", "south", "east", "west", "up", "down"};
+    final String STARTINGROOM = "Entrance"; // Starting room
+    String currentRoom = STARTINGROOM;
     
     enum CommandType {
         DIRECTION,
@@ -519,19 +520,23 @@ public class Space_Station_Text_Adventure
     }
     
     void addInventory(String item) {
+        // add item to dummy room Inventory
         addItem("Inventory", item);
     }
     
     boolean removeInventory(String item) {
+        // remove item from dummy room Inventory
         return removeItem("Inventory", item);
     }
     
     boolean hasItem(String item) {
+         // check if dummy room Inventory contains item
         ArrayList<String> roomItems = itemsDictionary.get("Inventory");
         return roomItems.contains(item);
     }
     
     void printItemsInRoom(String room) {
+        // list all items in dummy room
         ArrayList<String> roomItems = itemsDictionary.get(room);
         System.out.println("Items in this room:");
         
@@ -541,8 +546,10 @@ public class Space_Station_Text_Adventure
     void printInventory() {
         ArrayList<String> roomItems = itemsDictionary.get("Inventory");
         System.out.println("Items in inventory:");
-        // prints with square brackets but this is intentional because it looks better
-        System.out.println(roomItems);
+        // System.out.println(roomItems); just printing array list will display items in square brackets
+        for (String item: roomItems) {
+            System.out.println(item);
+        }
     }
     
     boolean applyItemsToRoom(String roomName) {
@@ -773,10 +780,10 @@ public class Space_Station_Text_Adventure
             CommandType commandType = command.type; // enum
             String commandInstruction = command.instructions; // extra instructions
             if (Boolean.parseBoolean(configurations.get("clearScreen"))) {
-                /* IF clearScreen == "true":
+                /* if clearScreen == "true":
                  * clear screen
-                 * ELSEIF clearScreen == "false" or null (not found in config folder, turns into false in parseBoolean):
-                 * continue
+                 * else clearScreen == "false" or null (not found in config folder, turns into false in parseBoolean):
+                 * continue program
                  */
                 clearScreen();
             }
@@ -838,9 +845,9 @@ public class Space_Station_Text_Adventure
                         if (itemEnum == OnInteract.COMPLETEGAME && currentRoom.equals(roomName)) {
                             gameComplete = true;
                         } else if (itemEnum == OnInteract.TELEPORT && currentRoom.equals(roomName)) {
-                            System.out.println(extraInfo);
+                            System.out.println(extraInfo); // info like "you teleported!" to user
                             removeInventory(object);
-                            currentRoom = "Entrance";
+                            currentRoom = STARTINGROOM;
                         } else if (itemEnum == OnInteract.HINT && currentRoom.equals(roomName)) {
                             System.out.println(extraInfo);
                         } else {
@@ -888,8 +895,8 @@ public class Space_Station_Text_Adventure
             } else if (commandType == CommandType.SETTING) {
                 String[] settingArr = commandInstruction.split(" ");
                 if (settingArr.length == 2) {
-                    String setting = settingArr[0];
-                    String value = settingArr[1];
+                    String setting = settingArr[0]; // setting to change
+                    String value = settingArr[1]; // new setting value
                     if (configurations.get(setting) != null) {
                         // setting already has a value so change
                         configurations.put(setting, value);
