@@ -20,8 +20,7 @@ public class Space_Station_Text_Adventure
 {
     // Create list which contains list of possible directions to check whether a direction is possible
     final String[] DIRECTIONSLIST = {"north", "south", "east", "west", "up", "down"};
-    final String STARTINGROOM = "Entrance"; // Starting room
-    String currentRoom = STARTINGROOM;
+    String currentRoom;
     
     enum CommandType {
         DIRECTION,
@@ -44,6 +43,8 @@ public class Space_Station_Text_Adventure
     
     // Create a new dictionary to store descriptions
     Dictionary<String, String> descriptionDictionary = new Hashtable<>();
+    // Dictionary for rooms (only used to check if a room exists)
+    Dictionary<String, Boolean> roomDictionary = new Hashtable<>();
     // Dictionary for directions
     Dictionary<String, Dictionary> directionDictionary = new Hashtable<>();
     // Dictionary for items
@@ -61,9 +62,43 @@ public class Space_Station_Text_Adventure
     // dictionary with keys like introduction and game complete can be stored as file and then in dictionary when run
     Dictionary<String, String> configurations = new Hashtable<>();
     
+    void print(String str) {
+        // if print method is called with one parameter, this method is run
+        // print is 13 characters shorter than System.out.println. There are probably 50+ print functions, saves more than 650 characters
+        System.out.println(str);
+    }
+    
+    // method overloading
+    void print(String str, String colour) {
+        // if print method is called with two parameters, this method is run
+        if (System.console() != null && Boolean.parseBoolean(configurations.get("colours"))) {
+            // run if true, do not run if false or null (not found in config folder)
+            System.out.println(getColour(colour) + str + getColour("RESET"));
+        } else {
+            // no console attached, might be running in a program like BlueJ
+            System.out.println(str);
+        }
+    }
+    
     void clearScreen() {
         // clears BlueJ window
         System.out.println("\u000C");
+    }
+    
+    boolean startingRoomExists() {
+        boolean success = true;
+        String configStartingRoom = configurations.get("startingRoom");
+        if (configStartingRoom != null) {
+            if (roomDictionary.get(configStartingRoom) == null) {
+                System.out.println("starting room file was found but it does not exist");
+                System.out.println("error found at config/startingRoom");
+                success = false;
+            }
+        } else {
+            System.out.println("starting room folder not found in config folder");
+            success = false;
+        }
+        return success;
     }
     
     // Methods to do with configurations
@@ -228,7 +263,7 @@ public class Space_Station_Text_Adventure
         coloursDictionary.put("MAGENTA", "\u001B[35m");
         coloursDictionary.put("CYAN", "\u001b[36m");
         coloursDictionary.put("WHITE", "\u001b[37m");
-        coloursDictionary.put("RESET", "\u001b[38m"); // stop ansi colouring
+        coloursDictionary.put("RESET", "\u001b[0m"); // stop ansi colouring
     }
     
     String getColour(String colour) {
@@ -602,6 +637,12 @@ public class Space_Station_Text_Adventure
         waitForInput();
         System.out.println("to toggle clear screen, type 'setting clearScreen (true/false)'");
         waitForInput();
+        if (System.console() != null) {
+            // console attached
+            System.out.println("if the text on screen is odd, try disabling coloured text");
+            System.out.println("to toggle coloured text, type 'setting colours (true/false)'");
+            waitForInput();
+        }
         System.out.println("if you need to see the command list again, type 'help'");
         waitForInput();
     }
@@ -712,6 +753,7 @@ public class Space_Station_Text_Adventure
     /**
      * Constructor for objects of class Space_Station_Text_Adventure
      */
+    //public static void main(String[] args)
     public Space_Station_Text_Adventure()
     {
         // INITALISE VARIABLES
@@ -719,12 +761,14 @@ public class Space_Station_Text_Adventure
         File roomFolder = new File("Rooms");
         // Create a list of contained files
         File[] roomsFiles = roomFolder.listFiles();
-        // used to check if functions are successful
+        // used to check if methods are successful
         boolean success;
         
         for (int fileIndex = 0; fileIndex < roomsFiles.length; fileIndex++) {
             String fileName = roomsFiles[fileIndex].getName();
             String roomName = fileName;
+            // add true to dictionary to show room exists in program
+            roomDictionary.put(roomName, true);
             // functions that return a success boolean are functions which are required to run successfully
             success = applyDirectionsToRoom(roomName);
             if (!success) {
@@ -756,12 +800,20 @@ public class Space_Station_Text_Adventure
         initColours();
         applyConfigurations();
         
+        success = startingRoomExists();
+        if (!success) {
+            return;
+        }
+        final String STARTINGROOM = configurations.get("startingRoom");
+        currentRoom = STARTINGROOM;
+        
         // INSTRUCTIONS
         if (false) {
             howToPlay();
             introduction();
             clearScreen();
         }
+        
         
         // START MAIN GAME LOOP
         
