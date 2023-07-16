@@ -3,7 +3,7 @@
  * with a meteor
  *
  * @author Ritesh Ravji
- * @version 26/6/23
+ * @version 17/7/23
  */
 
 import java.util.Scanner; // Read keyboard
@@ -16,7 +16,7 @@ import java.util.Dictionary; // Save room data in dictionary
 import java.util.Hashtable; // Goes with Dictionary
 import java.util.Enumeration; // Goes with Dictionary AND for making enums
 
-public class Space_Station_Text_Adventure
+public class SpaceStationTextAdventure
 {
     // Create list which contains list of possible directions to check whether a direction is possible
     final String[] DIRECTIONSLIST = {"north", "south", "east", "west", "up", "down"};
@@ -42,7 +42,7 @@ public class Space_Station_Text_Adventure
     Scanner keyboard = new Scanner(System.in);
     
     // Create a new dictionary to store descriptions
-    Dictionary<String, String> descriptionDictionary = new Hashtable<>();
+    Dictionary<String, String> descriptionDictionary;
     // Dictionary for rooms (only used to check if a room exists)
     Dictionary<String, Boolean> roomDictionary = new Hashtable<>();
     // Dictionary for directions
@@ -70,6 +70,7 @@ public class Space_Station_Text_Adventure
     
     // method overloading
     void print(String str, String colour) {
+        System.out.println(getColour(colour) + str + getColour("RESET"));
         // if print method is called with two parameters, this method is run
         if (System.console() != null && Boolean.parseBoolean(configurations.get("colours"))) {
             // run if true, do not run if false or null (not found in config folder)
@@ -81,8 +82,17 @@ public class Space_Station_Text_Adventure
     }
     
     void clearScreen() {
-        // clears BlueJ window
-        System.out.println("\u000C");
+        // clears BlueJ and command prompt window
+        try {
+            // clear screen
+            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+        } catch(IOException error) {
+            System.out.println("error occured when clearing screen");
+            System.out.println(error.getClass().getCanonicalName());
+        } catch(InterruptedException error) {
+            System.out.println("error occured when clearing screen");
+            System.out.println(error.getClass().getCanonicalName());
+        }
     }
     
     boolean startingRoomExists() {
@@ -106,33 +116,38 @@ public class Space_Station_Text_Adventure
     void applyConfigurations() {
         // get the folder for configurations
         File configFolder = new File("config");
-        // Create a list of contained files
-        File[] configFiles = configFolder.listFiles();
-        for (File propertyFile: configFiles) {
-            String propertyName = propertyFile.getName();
-            // delete .txt from name
-            propertyName = propertyName.substring(0, propertyName.length()-4);
-            Scanner readFile;
-            try {
-                // Safely open the file
-                readFile = new Scanner(propertyFile);
-            } catch (IOException error) {
-                System.out.println("failed to load configuration for " + propertyName);
-                System.out.println(error.getClass().getCanonicalName());
-                //error.printStackTrace();
-                // continue because opening has failed and non essential part of text adventure
-                continue;
-            }
-            String text = "";
-            while (readFile.hasNextLine()) {
-                text += readFile.nextLine();
-                // need to add newline character or it will be one big line
-                // check if another line otherwise there will be a newline at end of string
-                if (readFile.hasNextLine()) {
-                    text += "\n";
+        if (configFolder.exists()) {
+            // Create a list of contained files
+            File[] configFiles = configFolder.listFiles();
+            for (File propertyFile: configFiles) {
+                String propertyName = propertyFile.getName();
+                // delete .txt from name
+                propertyName = propertyName.substring(0, propertyName.length()-4);
+                Scanner readFile;
+                try {
+                    // Safely open the file
+                    readFile = new Scanner(propertyFile);
+                } catch (IOException error) {
+                    System.out.println("failed to load configuration for " + propertyName);
+                    System.out.println(error.getClass().getCanonicalName());
+                    //error.printStackTrace();
+                    // continue because opening has failed and non essential part of text adventure
+                    continue;
                 }
+                String text = "";
+                while (readFile.hasNextLine()) {
+                    text += readFile.nextLine();
+                    // need to add newline character or it will be one big line
+                    // check if another line otherwise there will be a newline at end of string
+                    if (readFile.hasNextLine()) {
+                        text += "\n";
+                    }
+                }
+                configurations.put(propertyName, text);
             }
-            configurations.put(propertyName, text);
+        } else {
+            // continue because opening has failed and non essential part of text adventure
+            System.out.println("WARNING config folder not found");
         }
     }
     
@@ -164,44 +179,49 @@ public class Space_Station_Text_Adventure
         // on program init
         // get the folder for use items
         File useItemsFolder = new File("UseItems");
-        // Create a list of contained files
-        File[] useItemsFiles = useItemsFolder.listFiles();
-        for (File itemFile: useItemsFiles) {
-            String itemName = itemFile.getName();
-            // delete .txt from name
-            itemName = itemName.substring(0, itemName.length()-4);
-            Scanner readFile;
-            try {
-                // Safely open the file
-                readFile = new Scanner(itemFile);
-            } catch (IOException error) {
-                System.out.println("failed to load item actions for " + itemName);
-                System.out.println(error.getClass().getCanonicalName());
-                //error.printStackTrace();
-                // continue because opening has failed and non essential part of text adventure
-                continue;
-            }
-            int line = 0;
-            String enumType = ""; // what enum (HINT, TELEPORT, etc)
-            String roomName = ""; // where to teleport or give hint
-            String extraInfo = "";
-            
-            while (readFile.hasNextLine()) {
-                line++;
-                if (line == 1) {
-                    enumType = readFile.nextLine();
-                } else if (line == 2) {
-                    roomName = readFile.nextLine();
-                } else {
-                    // need to add newline character or it will be one big line
-                    extraInfo += readFile.nextLine();
-                    if (readFile.hasNextLine()) {
-                        // only add newline if there is another line
-                        extraInfo += "\n";
+        if (useItemsFolder.exists()) {
+            // Create a list of contained files
+            File[] useItemsFiles = useItemsFolder.listFiles();
+            for (File itemFile: useItemsFiles) {
+                String itemName = itemFile.getName();
+                // delete .txt from name
+                itemName = itemName.substring(0, itemName.length()-4);
+                Scanner readFile;
+                try {
+                    // Safely open the file
+                    readFile = new Scanner(itemFile);
+                } catch (IOException error) {
+                    System.out.println("failed to load item actions for " + itemName);
+                    System.out.println(error.getClass().getCanonicalName());
+                    //error.printStackTrace();
+                    // continue because opening has failed and non essential part of text adventure
+                    continue;
+                }
+                int line = 0;
+                String enumType = ""; // what enum (HINT, TELEPORT, etc)
+                String roomName = ""; // where to teleport or give hint
+                String extraInfo = "";
+                
+                while (readFile.hasNextLine()) {
+                    line++;
+                    if (line == 1) {
+                        enumType = readFile.nextLine();
+                    } else if (line == 2) {
+                        roomName = readFile.nextLine();
+                    } else {
+                        // need to add newline character or it will be one big line
+                        extraInfo += readFile.nextLine();
+                        if (readFile.hasNextLine()) {
+                            // only add newline if there is another line
+                            extraInfo += "\n";
+                        }
                     }
                 }
+                addUseItem(itemName, enumType, roomName, extraInfo);
             }
-            addUseItem(itemName, enumType, roomName, extraInfo);
+        } else {
+            // continue because opening has failed and non essential part of text adventure
+            System.out.println("WARNING UseItems folder not found");
         }
     }
     
@@ -219,29 +239,34 @@ public class Space_Station_Text_Adventure
         // should run when program is initiated
         // get the folder for room sequences
         File roomSequenceFolder = new File("NewRoomSequence");
-        // Create a list of contained files
-        File[] roomSequenceFiles = roomSequenceFolder.listFiles();
-        for (File roomFile: roomSequenceFiles) {
-            String roomName = roomFile.getName();
-            // delete .txt from name
-            roomName = roomName.substring(0, roomName.length()-4);
-            Scanner readFile;
-            try {
-                // Safely open the file
-                readFile = new Scanner(roomFile);
-            } catch (IOException error) {
-                System.out.println("failed to load sequence for " + roomName);
-                System.out.println(error.getClass().getCanonicalName());
-                //error.printStackTrace();
-                // continue because opening has failed and non essential part of text adventure
-                continue;
+        if (roomSequenceFolder.exists()) {
+            // Create a list of contained files
+            File[] roomSequenceFiles = roomSequenceFolder.listFiles();
+            for (File roomFile: roomSequenceFiles) {
+                String roomName = roomFile.getName();
+                // delete .txt from name
+                roomName = roomName.substring(0, roomName.length()-4);
+                Scanner readFile;
+                try {
+                    // Safely open the file
+                    readFile = new Scanner(roomFile);
+                } catch (IOException error) {
+                    System.out.println("failed to load sequence for " + roomName);
+                    System.out.println(error.getClass().getCanonicalName());
+                    //error.printStackTrace();
+                    // continue because opening has failed and non essential part of text adventure
+                    continue;
+                }
+                String sequence = "";
+                while (readFile.hasNextLine()) {
+                    // need to add newline character or it will be one big line
+                    sequence += readFile.nextLine() + "\n";
+                }
+                addRoomSequence(roomName, sequence);
             }
-            String sequence = "";
-            while (readFile.hasNextLine()) {
-                // need to add newline character or it will be one big line
-                sequence += readFile.nextLine() + "\n";
-            }
-            addRoomSequence(roomName, sequence);
+        } else {
+            // continue because opening has failed and non essential part of text adventure
+            System.out.println("WARNING NewRoomSequence folder not found");
         }
     }
     
@@ -390,32 +415,37 @@ public class Space_Station_Text_Adventure
         
         // get the folder for item descriptions
         File itemDescriptFolder = new File("ItemDescriptions");
-        // Create a list of contained files
-        File[] itemDescriptFiles = itemDescriptFolder.listFiles();
-        
-        for (int i = 0; i < itemDescriptFiles.length; i++) {
-            String itemName = itemDescriptFiles[i].getName();
-            // delete .txt from name
-            itemName = itemName.substring(0, itemName.length()-4);
-            File currentItem = itemDescriptFiles[i];
-            Scanner readFile;
-            try {
-                // Safely open the file
-                readFile = new Scanner(currentItem);
-            } catch (IOException error) {
-                System.out.println("failed to load description for " + itemName);
-                System.out.println(error.getClass().getCanonicalName());
-                //error.printStackTrace();
-                // continue because opening has failed and non essential part of text adventure
-                continue;
+        if (itemDescriptFolder.exists()) {
+            // Create a list of contained files
+            File[] itemDescriptFiles = itemDescriptFolder.listFiles();
+            
+            for (int i = 0; i < itemDescriptFiles.length; i++) {
+                String itemName = itemDescriptFiles[i].getName();
+                // delete .txt from name
+                itemName = itemName.substring(0, itemName.length()-4);
+                File currentItem = itemDescriptFiles[i];
+                Scanner readFile;
+                try {
+                    // Safely open the file
+                    readFile = new Scanner(currentItem);
+                } catch (IOException error) {
+                    System.out.println("failed to load description for " + itemName);
+                    System.out.println(error.getClass().getCanonicalName());
+                    //error.printStackTrace();
+                    // continue because opening has failed and non essential part of text adventure
+                    continue;
+                }
+                int lineNum = 0;
+                String description = "";
+                while (readFile.hasNextLine()) {
+                    // need to add newline character or it will be one big line
+                    description += "\n"+readFile.nextLine();
+                }
+                itemDescriptionDictionary.put(itemName, description);
             }
-            int lineNum = 0;
-            String description = "";
-            while (readFile.hasNextLine()) {
-                // need to add newline character or it will be one big line
-                description += "\n"+readFile.nextLine();
-            }
-            itemDescriptionDictionary.put(itemName, description);
+        } else {
+            // continue because opening has failed and non essential part of text adventure
+            System.out.println("WARNING ItemDescriptions folder not found");
         }
     }
     
@@ -446,66 +476,72 @@ public class Space_Station_Text_Adventure
     boolean applyInteracts() {
         // get the folder for interactables
         File interactablesFolder = new File("Interactables");
-        // Create a list of contained files
-        File[] interactablesFiles = interactablesFolder.listFiles();
-        Scanner readFile;
-        for (int i = 0; i < interactablesFiles.length; i++) {
-            String interactableName = interactablesFiles[i].getName();
-            // delete .txt from name
-            interactableName = interactableName.substring(0, interactableName.length()-4);
-            File currentInteractable = interactablesFiles[i];
-            try {
-                // Safely open the file
-                //if (true)
-                    //throw new IOException();
-                readFile = new Scanner(currentInteractable);
-            } catch (IOException error) {
-                System.out.println("Could not open the file containing interactable " + interactableName);
-                System.out.println("file path: "+currentInteractable.getAbsolutePath());
-                System.out.println(error.getClass().getCanonicalName());
-                error.printStackTrace();
-                // stop because directions are an essential part of the program
-                return false;
-            }
-            int lineNum = 0;
-            String enabledText = null; // BlueJ does not like it when you don't initalise a value to String variables
-            String disabledText = null;
-            String room = null;
-            String startRoom = null;
-            String leadsTo = null;
-            String direction = null;
-            while (readFile.hasNextLine()) {
-                String line = readFile.nextLine();
-                lineNum++;
-                if (lineNum == 1) {
-                    // comments in file
-                    continue;
-                } else if (lineNum == 2) {
-                    // activated text
-                    enabledText = line;
-                } else if (lineNum == 3) {
-                    // deactivated text
-                    disabledText = line;
-                } else if (lineNum == 4) {
-                    // room to place
-                    room = line;
-                } else if (lineNum == 5) {
-                    // start room
-                    startRoom = line;
-                } else if (lineNum == 6) {
-                    // room unlocks
-                    leadsTo = line;
-                } else if (lineNum == 7) {
-                    // direction from start room
-                    direction = line;
+        if (interactablesFolder.exists()) {
+            // Create a list of contained files
+            File[] interactablesFiles = interactablesFolder.listFiles();
+            Scanner readFile;
+            for (int i = 0; i < interactablesFiles.length; i++) {
+                String interactableName = interactablesFiles[i].getName();
+                // delete .txt from name
+                interactableName = interactableName.substring(0, interactableName.length()-4);
+                File currentInteractable = interactablesFiles[i];
+                try {
+                    // Safely open the file
+                    //if (true)
+                        //throw new IOException();
+                    readFile = new Scanner(currentInteractable);
+                } catch (IOException error) {
+                    System.out.println("Could not open the file containing interactable " + interactableName);
+                    System.out.println("file path: "+currentInteractable.getAbsolutePath());
+                    System.out.println(error.getClass().getCanonicalName());
+                    error.printStackTrace();
+                    // stop because directions are an essential part of the program
+                    return false;
+                }
+                int lineNum = 0;
+                String enabledText = null; // BlueJ does not like it when you don't initalise a value to String variables
+                String disabledText = null;
+                String room = null;
+                String startRoom = null;
+                String leadsTo = null;
+                String direction = null;
+                while (readFile.hasNextLine()) {
+                    String line = readFile.nextLine();
+                    lineNum++;
+                    if (lineNum == 1) {
+                        // comments in file
+                        continue;
+                    } else if (lineNum == 2) {
+                        // activated text
+                        enabledText = line;
+                    } else if (lineNum == 3) {
+                        // deactivated text
+                        disabledText = line;
+                    } else if (lineNum == 4) {
+                        // room to place
+                        room = line;
+                    } else if (lineNum == 5) {
+                        // start room
+                        startRoom = line;
+                    } else if (lineNum == 6) {
+                        // room unlocks
+                        leadsTo = line;
+                    } else if (lineNum == 7) {
+                        // direction from start room
+                        direction = line;
+                    }
+                }
+                // check each variable has a value
+                if (enabledText != null && disabledText != null && room != null && startRoom != null && leadsTo != null && direction != null) {
+                    addInteract(room, interactableName, direction, startRoom, leadsTo, enabledText, disabledText);
+                } else {
+                    System.out.println("an error occurred with an interactable");
                 }
             }
-            // check each variable has a value
-            if (enabledText != null && disabledText != null && room != null && startRoom != null && leadsTo != null && direction != null) {
-                addInteract(room, interactableName, direction, startRoom, leadsTo, enabledText, disabledText);
-            } else {
-                System.out.println("an error occurred with an interactable");
-            }
+        } else {
+            System.out.println("Interactable folder not found");
+            // stop because directions are an essential part of the program
+            return false;
         }
         return true; // program success!
     }
@@ -639,7 +675,7 @@ public class Space_Station_Text_Adventure
         waitForInput();
         if (System.console() != null) {
             // console attached
-            System.out.println("if the text on screen is odd, try disabling coloured text");
+            System.out.println("if the text on screen is odd (random square brackets), try disabling coloured text");
             System.out.println("to toggle coloured text, type 'setting colours (true/false)'");
             waitForInput();
         }
@@ -749,18 +785,29 @@ public class Space_Station_Text_Adventure
         CommandResult returnPackage = new CommandResult(commandType, commandInstruction);
         return returnPackage;
     }
-    
+    public static void main(String[] args) {
+        // will run when accessed from .jar file
+        // run text adventure as class from separate main function to get around accessing non-static variables and methods from static context
+        SpaceStationTextAdventure adventure = new SpaceStationTextAdventure();
+    }
     /**
      * Constructor for objects of class Space_Station_Text_Adventure
      */
-    //public static void main(String[] args)
-    public Space_Station_Text_Adventure()
+    public SpaceStationTextAdventure()
     {
+        initColours();
+        print("Hello world", "RED");
+        descriptionDictionary = new Hashtable<>();
         // INITALISE VARIABLES
         // get the file for rooms
         File roomFolder = new File("Rooms");
         // Create a list of contained files
         File[] roomsFiles = roomFolder.listFiles();
+        if (roomsFiles == null) {
+            System.out.println("error: no room files were found");
+            System.out.println("make sure there is a folder 'Rooms' in the same directory");
+            return;
+        }
         // used to check if methods are successful
         boolean success;
         
