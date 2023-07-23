@@ -26,6 +26,7 @@ public class SpaceStationTextAdventure
         DIRECTION,
         DESCRIPTION,
         PICKUP,
+        GET,
         DROP,
         INTERACT,
         USE,
@@ -747,6 +748,16 @@ public class SpaceStationTextAdventure
                         commandType = CommandType.DIRECTION;
                         validInput = true;
                         break;
+                    case "U":
+                        commandInstruction = "up"; 
+                        commandType = CommandType.DIRECTION;
+                        validInput = true;
+                        break;
+                    case "D":
+                        commandInstruction = "down"; 
+                        commandType = CommandType.DIRECTION;
+                        validInput = true;
+                        break;
             
                 }
             }
@@ -795,8 +806,11 @@ public class SpaceStationTextAdventure
      */
     public SpaceStationTextAdventure()
     {
+        
         initColours();
         print("Hello world", "RED");
+        
+        
         descriptionDictionary = new Hashtable<>();
         // INITALISE VARIABLES
         // get the file for rooms
@@ -844,7 +858,6 @@ public class SpaceStationTextAdventure
         applyRoomSequences(); // add information to the program about using room sequences from the RoomSequences folder
         applyUseItems(); // add information to the program about using items from the UseItems folder
         
-        initColours();
         applyConfigurations();
         
         success = startingRoomExists();
@@ -855,8 +868,10 @@ public class SpaceStationTextAdventure
         currentRoom = STARTINGROOM;
         
         // INSTRUCTIONS
-        if (false) {
+        if (true) {
+            clearScreen();
             howToPlay();
+            clearScreen();
             introduction();
             clearScreen();
         }
@@ -868,7 +883,7 @@ public class SpaceStationTextAdventure
         
         while (!gameComplete) {
             // Separator between last action
-            System.out.println("-".repeat(25));
+            System.out.println("=".repeat(25));
             System.out.println("You are currently in " + currentRoom);
             System.out.println("");
             printInteractsInRoom(currentRoom);
@@ -913,7 +928,7 @@ public class SpaceStationTextAdventure
                 } else {
                     System.out.println("You do not have this item...");
                 }
-            } else if (commandType == CommandType.PICKUP) {
+            } else if (commandType == CommandType.PICKUP || commandType == CommandType.GET) {
                 String item = commandInstruction;
                 success = removeItem(currentRoom, item);
                 if (success) {
