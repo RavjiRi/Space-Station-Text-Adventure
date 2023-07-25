@@ -71,7 +71,18 @@ public class SpaceStationTextAdventure
     
     // method overloading
     void print(String str, String colour) {
-        System.out.println(getColour(colour) + str + getColour("RESET"));
+        // if print method is called with two parameters, this method is run
+        if (System.console() != null && Boolean.parseBoolean(configurations.get("colours"))) {
+            // run if true, do not run if false or null (not found in config folder)
+            System.out.println(getColour(colour) + str + getColour("RESET"));
+        } else {
+            // no console attached, might be running in a program like BlueJ
+            System.out.println(str);
+        }
+    }
+    
+    // method overloading for printing items in a room
+    void print(ArrayList str, String colour) {
         // if print method is called with two parameters, this method is run
         if (System.console() != null && Boolean.parseBoolean(configurations.get("colours"))) {
             // run if true, do not run if false or null (not found in config folder)
@@ -88,11 +99,11 @@ public class SpaceStationTextAdventure
             // clear screen
             new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
         } catch(IOException error) {
-            System.out.println("error occured when clearing screen");
-            System.out.println(error.getClass().getCanonicalName());
+            print("error occured when clearing screen", "RED");
+            print(error.getClass().getCanonicalName(), "RED");
         } catch(InterruptedException error) {
-            System.out.println("error occured when clearing screen");
-            System.out.println(error.getClass().getCanonicalName());
+            print("error occured when clearing screen", "RED");
+            print(error.getClass().getCanonicalName(), "RED");
         }
     }
     
@@ -101,12 +112,12 @@ public class SpaceStationTextAdventure
         String configStartingRoom = configurations.get("startingRoom");
         if (configStartingRoom != null) {
             if (roomDictionary.get(configStartingRoom) == null) {
-                System.out.println("starting room file was found but it does not exist");
-                System.out.println("error found at config/startingRoom");
+                print("starting room file was found but it does not exist", "RED");
+                print("error found at config/startingRoom", "RED");
                 success = false;
             }
         } else {
-            System.out.println("starting room folder not found in config folder");
+            print("starting room folder not found in config folder", "RED");
             success = false;
         }
         return success;
@@ -129,8 +140,8 @@ public class SpaceStationTextAdventure
                     // Safely open the file
                     readFile = new Scanner(propertyFile);
                 } catch (IOException error) {
-                    System.out.println("failed to load configuration for " + propertyName);
-                    System.out.println(error.getClass().getCanonicalName());
+                    print("failed to load configuration for " + propertyName, "YELLOW");
+                    print(error.getClass().getCanonicalName(), "RED");
                     //error.printStackTrace();
                     // continue because opening has failed and non essential part of text adventure
                     continue;
@@ -148,7 +159,9 @@ public class SpaceStationTextAdventure
             }
         } else {
             // continue because opening has failed and non essential part of text adventure
-            System.out.println("WARNING config folder not found");
+            print("WARNING config folder not found", "YELLOW");
+            print("make sure the config folder is in the same directory as the project file. Many features may be inaccessible", "YELLOW");
+            waitForInput();
         }
     }
     
@@ -165,8 +178,8 @@ public class SpaceStationTextAdventure
             enumExists = true;
         } catch (IllegalArgumentException e) {
             // Enum does not exist
-            System.out.println("An error occured with an item");
-            System.out.println("it may be impossible to complete the game");
+            print("An error occured with an item", "YELLOW");
+            print("it may be impossible to complete the game", "YELLOW");
             //System.out.println(e);
         }
         if (enumExists) {
@@ -192,8 +205,8 @@ public class SpaceStationTextAdventure
                     // Safely open the file
                     readFile = new Scanner(itemFile);
                 } catch (IOException error) {
-                    System.out.println("failed to load item actions for " + itemName);
-                    System.out.println(error.getClass().getCanonicalName());
+                    print("failed to load item actions for " + itemName, "YELLOW");
+                    print(error.getClass().getCanonicalName(), "RED");
                     //error.printStackTrace();
                     // continue because opening has failed and non essential part of text adventure
                     continue;
@@ -222,7 +235,9 @@ public class SpaceStationTextAdventure
             }
         } else {
             // continue because opening has failed and non essential part of text adventure
-            System.out.println("WARNING UseItems folder not found");
+            print("WARNING UseItems folder not found", "YELLOW");
+            print("make sure the UseItems folder is in the same directory as the project file. Some features may be inaccessible", "YELLOW");
+            waitForInput();
         }
     }
     
@@ -252,8 +267,8 @@ public class SpaceStationTextAdventure
                     // Safely open the file
                     readFile = new Scanner(roomFile);
                 } catch (IOException error) {
-                    System.out.println("failed to load sequence for " + roomName);
-                    System.out.println(error.getClass().getCanonicalName());
+                    print("failed to load sequence for " + roomName, "YELLOW");
+                    print(error.getClass().getCanonicalName(), "RED");
                     //error.printStackTrace();
                     // continue because opening has failed and non essential part of text adventure
                     continue;
@@ -267,7 +282,9 @@ public class SpaceStationTextAdventure
             }
         } else {
             // continue because opening has failed and non essential part of text adventure
-            System.out.println("WARNING NewRoomSequence folder not found");
+            print("WARNING NewRoomSequence folder not found", "YELLOW");
+            print("make sure the NewRoomSequence folder is in the same directory as the project file. Some features may be inaccessible", "YELLOW");
+            waitForInput();
         }
     }
     
@@ -321,16 +338,16 @@ public class SpaceStationTextAdventure
         // Get dictionary with every possible direction in current room
         Dictionary roomDictionary = directionDictionary.get(currentRoom);
         
-        System.out.println("You can move:");
+        print("You can move:");
         Enumeration<String> directions = roomDictionary.keys();
         while (directions.hasMoreElements()) {
             // Get dictionary key (direction)
             String roomDirection = directions.nextElement();
             // Get dictionary value (destination)
             String leadsTo = (String) directionDictionary.get(currentRoom).get(roomDirection);
-            System.out.println(roomDirection + " to " + leadsTo);
+            print(roomDirection + " to " + leadsTo, "CYAN");
         }
-        System.out.println("");
+        print("");
     }
     
     boolean moveDir(String direction) {
@@ -340,8 +357,12 @@ public class SpaceStationTextAdventure
         // null means no room in direction and return movement failed
         // if not null, then change the current room and return movement success
         if (room != null) {
-            currentRoom = room;
-            success = true;
+            if (roomDictionary.get(room) == null) {
+                print("tried to move to a room that does not exist", "RED");
+            } else {
+                currentRoom = room;
+                success = true;
+            }
         }
         return success;
     }
@@ -356,9 +377,9 @@ public class SpaceStationTextAdventure
             // Safely open the file
             readFile = new Scanner(directionsFile);
         } catch (IOException error) {
-            System.out.println("Could not open the file containing directions for " + roomName);
-            System.out.println("file path: "+directionsFile.getAbsolutePath());
-            System.out.println(error.getClass().getCanonicalName());
+            print("Could not open the file containing directions for " + roomName, "RED");
+            print("file path: "+directionsFile.getAbsolutePath(), "RED");
+            print(error.getClass().getCanonicalName(), "RED");
             error.printStackTrace();
             // stop because directions are an essential part of the program
             return false;
@@ -383,9 +404,9 @@ public class SpaceStationTextAdventure
     
     void readDescription(String room) {
         String roomDescription = descriptionDictionary.get(currentRoom);
-        System.out.println("");
-        System.out.println(roomDescription);
-        System.out.println("");
+        print("");
+        print(roomDescription, "YELLOW");
+        print("");
     }
     
     void applyDescriptionToRoom(String roomName) {
@@ -396,8 +417,8 @@ public class SpaceStationTextAdventure
             // Safely open the file
             readFile = new Scanner(descriptionFile);
         } catch (IOException error) {
-            System.out.println("failed to load description for " + roomName);
-            System.out.println(error.getClass().getCanonicalName());
+            print("failed to load description for " + roomName, "YELLOW");
+            print(error.getClass().getCanonicalName(), "RED");
             // continue because opening has failed and non essential part of text adventure
         }
         String roomDesc = ""; // room description as string
@@ -430,8 +451,8 @@ public class SpaceStationTextAdventure
                     // Safely open the file
                     readFile = new Scanner(currentItem);
                 } catch (IOException error) {
-                    System.out.println("failed to load description for " + itemName);
-                    System.out.println(error.getClass().getCanonicalName());
+                    print("failed to load description for " + itemName, "YELLOW");
+                    print(error.getClass().getCanonicalName(), "RED");
                     //error.printStackTrace();
                     // continue because opening has failed and non essential part of text adventure
                     continue;
@@ -446,19 +467,21 @@ public class SpaceStationTextAdventure
             }
         } else {
             // continue because opening has failed and non essential part of text adventure
-            System.out.println("WARNING ItemDescriptions folder not found");
+            print("WARNING ItemDescriptions folder not found", "YELLOW");
+            print("make sure the ItemDescriptions folder is in the same directory as the project file. Some features may be inaccessible", "YELLOW");
+            waitForInput();
         }
     }
     
     void readItemDescription(String item) {
         String itemDescription = itemDescriptionDictionary.get(item);
-        System.out.println("");
+        print("");
         if (itemDescription == null) {
-            System.out.println("item description not found");
+            print("item description not found", "RED");
         } else {
-            System.out.println(itemDescription);
+            print(itemDescription, "YELLOW");
         }
-        System.out.println("");
+        print("");
     }
     
     // Interact methods
@@ -492,9 +515,9 @@ public class SpaceStationTextAdventure
                         //throw new IOException();
                     readFile = new Scanner(currentInteractable);
                 } catch (IOException error) {
-                    System.out.println("Could not open the file containing interactable " + interactableName);
-                    System.out.println("file path: "+currentInteractable.getAbsolutePath());
-                    System.out.println(error.getClass().getCanonicalName());
+                    print("Could not open the file containing interactable " + interactableName, "RED");
+                    print("file path: "+currentInteractable.getAbsolutePath(), "RED");
+                    print(error.getClass().getCanonicalName(), "RED");
                     error.printStackTrace();
                     // stop because directions are an essential part of the program
                     return false;
@@ -536,11 +559,12 @@ public class SpaceStationTextAdventure
                 if (enabledText != null && disabledText != null && room != null && startRoom != null && leadsTo != null && direction != null) {
                     addInteract(room, interactableName, direction, startRoom, leadsTo, enabledText, disabledText);
                 } else {
-                    System.out.println("an error occurred with an interactable");
+                    print("an error occurred with an interactable", "RED");
                 }
             }
         } else {
-            System.out.println("Interactable folder not found");
+            print("ERROR: no interactable files were found", "RED");
+            print("make sure there is a folder 'Interactables' in the same directory", "RED");
             // stop because directions are an essential part of the program
             return false;
         }
@@ -553,12 +577,12 @@ public class SpaceStationTextAdventure
         
         // if statement otherwise will just say "You can interact with:" then empty if no keys in dictionary
         if (roomInteractables.size() > 0) {
-            System.out.println("You can interact with:");
+            print("You can interact with:");
             while (interactables.hasMoreElements()) {
                 String key = interactables.nextElement();
-                System.out.println(key);
+                print(key, "CYAN");
             }
-            System.out.println(""); // formatting
+            print(""); // formatting
         }
     }
     
@@ -610,17 +634,17 @@ public class SpaceStationTextAdventure
     void printItemsInRoom(String room) {
         // list all items in dummy room
         ArrayList<String> roomItems = itemsDictionary.get(room);
-        System.out.println("Items in this room:");
+        print("Items in this room:");
         
-        System.out.println(roomItems);
+        print(roomItems, "CYAN");
     }
     
     void printInventory() {
         ArrayList<String> roomItems = itemsDictionary.get("Inventory");
-        System.out.println("Items in inventory:");
+        print("Items in inventory:");
         // System.out.println(roomItems); just printing array list will display items in square brackets
         for (String item: roomItems) {
-            System.out.println(item);
+            print(item, "CYAN");
         }
     }
     
@@ -632,9 +656,9 @@ public class SpaceStationTextAdventure
             // Safely open the file
             readFile = new Scanner(itemsFile);
         } catch (IOException error) {
-            System.out.println("Could not open the file containing item for " + roomName);
-            System.out.println("file path: "+itemsFile.getAbsolutePath());
-            System.out.println(error.getClass().getCanonicalName());
+            print("Could not open the file containing item for " + roomName, "RED");
+            print("file path: "+itemsFile.getAbsolutePath(), "RED");
+            print(error.getClass().getCanonicalName(), "RED");
             error.printStackTrace();
             // stop because directions are an essential part of the program
             return false;
@@ -652,35 +676,35 @@ public class SpaceStationTextAdventure
     
     // Instruction methods
     void waitForInput() {
-        System.out.println("press enter to continue");
+        print("press enter to continue", "YELLOW");
         keyboard.nextLine();
     }
     
     void howToPlay() {
-        System.out.println("There are 6 possible directions:");
+        print("There are 6 possible directions:");
         // print each element in DIRECTIONSLIST
         for (String direction: DIRECTIONSLIST) {
-            System.out.println(direction);
+            print(direction, "CYAN");
         }
         waitForInput();
-        System.out.println("to get the description of the current room, type 'description'");
-        System.out.println("for the description of an item, type the 'description ' and items name");
+        print("to get the description of the current room, type 'description'");
+        print("for the description of an item, type the 'description ' and items name");
         waitForInput();
-        System.out.println("pick up an item with, 'pickup ' and item name");
-        System.out.println("drop an item with 'drop ' and item name");
-        System.out.println("use an item with 'use ' and item name");
+        print("pick up an item with, 'pickup ' and item name");
+        print("drop an item with 'drop ' and item name");
+        print("use an item with 'use ' and item name");
         waitForInput();
-        System.out.println("to interact, type 'interact ' and item name");
+        print("to interact, type 'interact ' and item name");
         waitForInput();
-        System.out.println("to toggle clear screen, type 'setting clearScreen (true/false)'");
+        print("to toggle clear screen, type 'setting clearScreen (true/false)'");
         waitForInput();
         if (System.console() != null) {
             // console attached
-            System.out.println("if the text on screen is odd (random square brackets), try disabling coloured text");
-            System.out.println("to toggle coloured text, type 'setting colours (true/false)'");
+            print("if the text on screen is odd (random square brackets), try disabling coloured text");
+            print("to toggle coloured text, type 'setting colours (true/false)'");
             waitForInput();
         }
-        System.out.println("if you need to see the command list again, type 'help'");
+        print("if you need to see the command list again, type 'help'", "MAGENTA");
         waitForInput();
     }
     
@@ -692,7 +716,7 @@ public class SpaceStationTextAdventure
             if (line.equals("waitForInput();")) {
                 waitForInput();
             } else {
-                System.out.println(line);
+                print(line);
             }
         }
     }
@@ -715,7 +739,7 @@ public class SpaceStationTextAdventure
         CommandType commandType = null;
         boolean validInput = false;
         while (!validInput) {
-            System.out.println("Input a command");
+            print("Input a command", "GREEN");
             String userInput = keyboard.nextLine();
             
             // Checks if input is a direction
@@ -790,7 +814,7 @@ public class SpaceStationTextAdventure
             }
             
             if (!validInput) {
-                System.out.println("Not a command");
+                print("Not a command", "RED");
             }
         }
         CommandResult returnPackage = new CommandResult(commandType, commandInstruction);
@@ -806,10 +830,9 @@ public class SpaceStationTextAdventure
      */
     public SpaceStationTextAdventure()
     {
-        
+        clearScreen();
+        applyConfigurations();
         initColours();
-        print("Hello world", "RED");
-        
         
         descriptionDictionary = new Hashtable<>();
         // INITALISE VARIABLES
@@ -818,8 +841,8 @@ public class SpaceStationTextAdventure
         // Create a list of contained files
         File[] roomsFiles = roomFolder.listFiles();
         if (roomsFiles == null) {
-            System.out.println("error: no room files were found");
-            System.out.println("make sure there is a folder 'Rooms' in the same directory");
+            print("ERROR: no room files were found", "RED");
+            print("make sure there is a folder 'Rooms' in the same directory", "RED");
             return;
         }
         // used to check if methods are successful
@@ -858,8 +881,6 @@ public class SpaceStationTextAdventure
         applyRoomSequences(); // add information to the program about using room sequences from the RoomSequences folder
         applyUseItems(); // add information to the program about using items from the UseItems folder
         
-        applyConfigurations();
-        
         success = startingRoomExists();
         if (!success) {
             return;
@@ -883,9 +904,9 @@ public class SpaceStationTextAdventure
         
         while (!gameComplete) {
             // Separator between last action
-            System.out.println("=".repeat(25));
-            System.out.println("You are currently in " + currentRoom);
-            System.out.println("");
+            print("=".repeat(25), "GREEN");
+            print("You are currently in " + currentRoom, "GREEN");
+            print("");
             printInteractsInRoom(currentRoom);
             printDirections();
             printItemsInRoom(currentRoom);
@@ -906,16 +927,16 @@ public class SpaceStationTextAdventure
                 
                 success = moveDir(direction);
                 if (success) {
-                    System.out.println("Moving " + direction);
+                    print("Moving " + direction, "YELLOW");
                 } else {
-                    System.out.println("No room in this direction!");
+                    print("No room in this direction!", "RED");
                 }
                 // Check for "room sequence", like a cutscene to tell the player extra useful info
                 String sequence = hasRoomSequence(currentRoom);
                 if (sequence != null) {
                     // exists
-                    System.out.println(""); // formatting
-                    System.out.println(sequence);
+                    print(""); // formatting
+                    print(sequence, "YELLOW");
                     waitForInput(); 
                 }
             } else if (commandType == CommandType.DESCRIPTION) {
@@ -926,25 +947,25 @@ public class SpaceStationTextAdventure
                     // not empty so print item description if is holding it
                     readItemDescription(commandInstruction);
                 } else {
-                    System.out.println("You do not have this item...");
+                    print("You do not have this item...", "YELLOW");
                 }
             } else if (commandType == CommandType.PICKUP || commandType == CommandType.GET) {
                 String item = commandInstruction;
                 success = removeItem(currentRoom, item);
                 if (success) {
-                    System.out.println("The item was added to inventory!");
+                    print("The item was added to inventory!", "YELLOW");
                     addInventory(item);
                 } else {
-                    System.out.println("The item does not exist!");
+                    print("The item does not exist!", "RED");
                 }
             } else if (commandType == CommandType.DROP) {
                 String item = commandInstruction;
                 success = removeInventory(item);
                 if (success) {
-                    System.out.println("The item was dropped!");
+                    print("The item was dropped!", "YELLOW");
                     addItem(currentRoom, item);
                 } else {
-                    System.out.println("The item does not exist!");
+                    print("The item does not exist!", "RED");
                 }
             } else if (commandType == CommandType.USE) {
                 String object = commandInstruction;
@@ -959,36 +980,36 @@ public class SpaceStationTextAdventure
                         if (itemEnum == OnInteract.COMPLETEGAME && currentRoom.equals(roomName)) {
                             gameComplete = true;
                         } else if (itemEnum == OnInteract.TELEPORT && currentRoom.equals(roomName)) {
-                            System.out.println(extraInfo); // info like "you teleported!" to user
+                            print(extraInfo, "YELLOW"); // info like "you teleported!" to user
                             removeInventory(object);
                             currentRoom = STARTINGROOM;
                         } else if (itemEnum == OnInteract.HINT && currentRoom.equals(roomName)) {
-                            System.out.println(extraInfo);
+                            print(extraInfo, "YELLOW");
                         } else {
                             // more likely to be error but just incase
-                            System.out.println("It did nothing");
+                            print("It did nothing", "YELLOW");
                         }
                     } else {
                         // no data so does nothing
-                        System.out.println("It did nothing");
+                        print("It did nothing", "RED");
                     }
                 } else {
                     // Not holding this
-                    System.out.println("You are not holding this...");
+                    print("You are not holding this...", "RED");
                 }
             } else if (commandType == CommandType.INTERACT) {
                 String object = commandInstruction;
                 String[] info = getInteractInRoom(currentRoom, object);
                 if (info == null) {
                     // not found
-                    System.out.println("The object does not exist");
+                    print("The object does not exist", "RED");
                 } else {
                     String startingRoom = info[0];
                     String leadsTo = info[1];
                     String direction = info[2];
                     String enabledText = info[3];
                     String disabledText = info[4];
-                    System.out.println(""); // formatting
+                    print(""); // formatting
                     // toggles directions
                     // IF: pathway exists between starting room and destination
                     // delete the pathway (e.g. gravity turned on, cannot float to room above)
@@ -996,13 +1017,13 @@ public class SpaceStationTextAdventure
                     // create pathway (e.g. gravity turned off, can float to room above)
                     if (roomInDirection(startingRoom, direction) != null) {
                         // already exists so revert changes
-                        System.out.println(disabledText);
+                        print(disabledText, "YELLOW");
                         delDirection(startingRoom, direction);
                     } else {
-                        System.out.println(enabledText);
+                        print(enabledText, "YELLOW");
                         addDirection(startingRoom, direction, leadsTo);
                     }
-                    System.out.println(""); // formatting
+                    print(""); // formatting
                 }
             } else if (commandType == CommandType.HELP) {
                 howToPlay();
@@ -1014,19 +1035,19 @@ public class SpaceStationTextAdventure
                     if (configurations.get(setting) != null) {
                         // setting already has a value so change
                         configurations.put(setting, value);
-                        System.out.println("setting changed");
+                        print("setting changed", "YELLOW");
                     } else {
                         // setting not found
-                        System.out.println("no setting found");
+                        print("no setting found", "RED");
                     }
                 } else {
-                    System.out.println("incorrect parameters, please use setting 'setting name' 'setting value'");
+                    print("incorrect parameters, please use setting 'setting name' 'setting value'", "RED");
                 }
             } else {
                 // Idealy would never occur but just in case
-                System.out.println("an error occured");
+                print("an error occured", "RED");
             }
         }
-        System.out.println(configurations.get("gameCompleteText")); // print text stored in config/gameCompleteText.txt which is stored in configrations in program
+        print(configurations.get("gameCompleteText"), "GREEN"); // print text stored in config/gameCompleteText.txt which is stored in configrations in program
     }
 }
