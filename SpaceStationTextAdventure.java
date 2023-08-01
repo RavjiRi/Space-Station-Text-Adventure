@@ -835,6 +835,7 @@ public class SpaceStationTextAdventure
         applyConfigurations();
         initColours();
         
+        // test for git
         descriptionDictionary = new Hashtable<>();
         // INITALISE VARIABLES
         // get the file for rooms
