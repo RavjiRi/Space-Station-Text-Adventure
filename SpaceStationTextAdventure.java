@@ -831,21 +831,6 @@ public class SpaceStationTextAdventure
      */
     public SpaceStationTextAdventure()
     {
-        //try {
-            //File f = new File(SpaceStationTextAdventure.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-            //System.out.println(f.getPath());
-        //String p = SpaceStationTextAdventure.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        //String dp = java.net.URLDecoder.decode(p, java.nio.charset.StandardCharsets.UTF_8);
-       // File jarFile = new File(SpaceStationTextAdventure.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        //File config = new File(jarFile.getParent(), "config");
-        //System.out.println(config.getPath());
-        //System.out.println(config.exists());
-       // print(p);
-        //print(dp);
-        //} catch (URISyntaxException error) {
-        //    print("fail");
-        //}
-        waitForInput();
         clearScreen();
         applyConfigurations();
         initColours();
@@ -859,6 +844,7 @@ public class SpaceStationTextAdventure
         if (roomsFiles == null) {
             print("ERROR: no room files were found", "RED");
             print("make sure there is a folder 'Rooms' in the same directory", "RED");
+            print("otherwise, make sure you are running the program with the current directory as the jar file directory");
             return;
         }
         // used to check if methods are successful
@@ -890,6 +876,7 @@ public class SpaceStationTextAdventure
         
         success = applyInteracts();
         if (!success) {
+            print("otherwise, make sure you are running the program with the current directory as the jar file directory");
             return; // program failure
         }
         
