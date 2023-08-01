@@ -3,7 +3,7 @@
  * with a meteor
  *
  * @author Ritesh Ravji
- * @version 17/7/23
+ * @version 25/7/23
  */
 
 import java.util.Scanner; // Read keyboard
@@ -15,6 +15,7 @@ import java.io.IOException; // Handle file exceptions
 import java.util.Dictionary; // Save room data in dictionary
 import java.util.Hashtable; // Goes with Dictionary
 import java.util.Enumeration; // Goes with Dictionary AND for making enums
+import java.net.URISyntaxException;
 
 public class SpaceStationTextAdventure
 {
@@ -830,6 +831,21 @@ public class SpaceStationTextAdventure
      */
     public SpaceStationTextAdventure()
     {
+        //try {
+            //File f = new File(SpaceStationTextAdventure.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            //System.out.println(f.getPath());
+        //String p = SpaceStationTextAdventure.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        //String dp = java.net.URLDecoder.decode(p, java.nio.charset.StandardCharsets.UTF_8);
+       // File jarFile = new File(SpaceStationTextAdventure.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        //File config = new File(jarFile.getParent(), "config");
+        //System.out.println(config.getPath());
+        //System.out.println(config.exists());
+       // print(p);
+        //print(dp);
+        //} catch (URISyntaxException error) {
+        //    print("fail");
+        //}
+        waitForInput();
         clearScreen();
         applyConfigurations();
         initColours();
