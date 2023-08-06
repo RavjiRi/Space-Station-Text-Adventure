@@ -15,7 +15,6 @@ import java.io.IOException; // Handle file exceptions
 import java.util.Dictionary; // Save room data in dictionary
 import java.util.Hashtable; // Goes with Dictionary
 import java.util.Enumeration; // Goes with Dictionary AND for making enums
-import java.net.URISyntaxException;
 
 public class SpaceStationTextAdventure
 {
