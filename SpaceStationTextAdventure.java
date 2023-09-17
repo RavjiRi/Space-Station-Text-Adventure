@@ -3,7 +3,7 @@
  * with a meteor
  *
  * @author Ritesh Ravji
- * @version 25/7/23
+ * @version 18/9/23
  */
 
 import java.util.Scanner; // Read keyboard
@@ -108,6 +108,7 @@ public class SpaceStationTextAdventure
     }
     
     boolean startingRoomExists() {
+        // a check to make sure the starting room exists, returns a true or false
         boolean success = true;
         String configStartingRoom = configurations.get("startingRoom");
         if (configStartingRoom != null) {
@@ -242,6 +243,7 @@ public class SpaceStationTextAdventure
     }
     
     String[] getUseItem(String itemName) {
+        // get the used item
         return useItemsDictionary.get(itemName);
     }
     
@@ -269,7 +271,6 @@ public class SpaceStationTextAdventure
                 } catch (IOException error) {
                     print("failed to load sequence for " + roomName, "YELLOW");
                     print(error.getClass().getCanonicalName(), "RED");
-                    //error.printStackTrace();
                     // continue because opening has failed and non essential part of text adventure
                     continue;
                 }
@@ -310,6 +311,7 @@ public class SpaceStationTextAdventure
     }
     
     String getColour(String colour) {
+        // get ansi colour codes by name
         return coloursDictionary.get(colour);
     }
 
@@ -403,6 +405,7 @@ public class SpaceStationTextAdventure
     // Description methods
     
     void readDescription(String room) {
+        // get room description and then print it
         String roomDescription = descriptionDictionary.get(currentRoom);
         print("");
         print(roomDescription, "YELLOW");
@@ -474,8 +477,10 @@ public class SpaceStationTextAdventure
     }
     
     void readItemDescription(String item) {
+        // get item description
         String itemDescription = itemDescriptionDictionary.get(item);
         print("");
+        // check description exists
         if (itemDescription == null) {
             print("item description not found", "RED");
         } else {
@@ -511,8 +516,6 @@ public class SpaceStationTextAdventure
                 File currentInteractable = interactablesFiles[i];
                 try {
                     // Safely open the file
-                    //if (true)
-                        //throw new IOException();
                     readFile = new Scanner(currentInteractable);
                 } catch (IOException error) {
                     print("Could not open the file containing interactable " + interactableName, "RED");
@@ -587,6 +590,7 @@ public class SpaceStationTextAdventure
     }
     
     String[] getInteractInRoom(String room, String interactName) {
+        // return array with interactables in room
         Dictionary<String, String[]> roomInteractables = interactDictionary.get(room);
         String[] interactInfo = roomInteractables.get(interactName.toLowerCase());
         return interactInfo;
@@ -676,6 +680,7 @@ public class SpaceStationTextAdventure
     
     // Instruction methods
     void waitForInput() {
+        // wait for input
         print("press enter to continue", "YELLOW");
         keyboard.nextLine();
     }
@@ -709,6 +714,7 @@ public class SpaceStationTextAdventure
     }
     
     void introduction() {
+        // print introduction
         String intro = configurations.get("introduction");
         String[] introArr = intro.split("\n");
         
