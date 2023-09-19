@@ -1,6 +1,8 @@
 /**
  * Text adventure where you have to divert the space station from collision course
- * with a meteor
+ * with a meteor.
+ * the text adventure can be changed by editing the project files
+ * for example, to change the item descriptions, go into the item descriptions folder and edit the txt file
  *
  * @author Ritesh Ravji
  * @version 18/9/23
